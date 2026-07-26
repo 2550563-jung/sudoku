@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="스도쿠">
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=14">
   <title>스도쿠</title>
 </head>
 <body>
@@ -23,7 +23,10 @@
       <span class="brand-mark"><img src="icon-48.png?v=12" alt=""></span>
       <span><strong>스도쿠</strong><small>집중력을 깨우는 숫자 퍼즐</small></span>
     </button>
-    <button id="themeToggle" class="theme-toggle" type="button" aria-expanded="false"><span id="themeSwatch"></span>색상</button>
+    <div class="topbar-actions">
+      <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">효과음 켬</button>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-expanded="false"><span id="themeSwatch"></span>색상</button>
+    </div>
   </header>
   <section id="themePanel" class="theme-panel card hidden" aria-label="색상 테마"></section>
   <section class="layout-panel card" aria-label="화면 배치">
@@ -42,10 +45,12 @@
       <div class="xpbar" role="progressbar" aria-label="레벨 진행도"><span id="homeXpBar"></span></div>
     </div>
     <div class="card">
+      <label class="field"><span>필수 닉네임</span><input id="playerNickname" type="text" minlength="2" maxlength="16" autocomplete="nickname" placeholder="2~16자"></label>
       <h2>난이도 선택</h2>
       <div id="difficultyGrid" class="difficulty-grid"></div>
       <button id="continueGame" class="primary wide hidden" type="button">이어하기</button>
       <button id="startGame" class="secondary wide" type="button">새 게임</button>
+      <p id="homeMessage" class="message" aria-live="polite"></p>
     </div>
     <div class="home-actions">
       <button id="openStats" class="card" type="button"><small>STATISTICS</small><strong>통계 보기</strong></button>
@@ -66,7 +71,10 @@
 
   <section id="gameScreen" class="screen hidden" hidden>
     <div class="game-head card">
-      <button id="backHome" type="button">‹ 메인</button>
+      <div class="game-nav">
+        <button id="backHome" type="button">‹ 메인</button>
+        <button id="leaveOnlineGame" class="hidden" type="button">나가기</button>
+      </div>
       <div><small>난이도</small><strong id="difficultyLabel">보통</strong></div>
       <div><small>실수</small><strong id="mistakes">0 / 3</strong></div>
       <div><small>시간</small><strong id="timer">00:00</strong></div>
@@ -141,8 +149,9 @@
   </section>
 
   <section id="rankingsScreen" class="screen hidden" hidden>
-    <div class="screen-title"><button id="rankingsBack" type="button">‹ 메인</button><h2>온라인 랭킹</h2></div>
+    <div class="screen-title"><button id="rankingsBack" type="button">‹ 메인</button><h2>전체 랭킹</h2></div>
     <div class="card ranking-filters">
+      <label><span>게임</span><select id="rankingMode"><option value="">전체</option><option value="single">싱글</option><option value="competition">2인 경쟁</option></select></label>
       <label><span>난이도</span><select id="rankingDifficulty"><option value="">전체</option></select></label>
       <button id="refreshRankings" class="secondary" type="button">새로고침</button>
     </div>
@@ -163,6 +172,6 @@
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-card"><h2 id="modalTitle"></h2><div id="modalText"></div><div id="modalActions" class="modal-actions"></div></div>
 </div>
-<script src="app.js?v=11"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

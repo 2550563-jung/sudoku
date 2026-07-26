@@ -37,6 +37,7 @@ button:disabled { cursor: not-allowed; opacity: .42; }
     max(10px, env(safe-area-inset-left));
 }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.topbar-actions { display: flex; align-items: center; gap: 7px; }
 .brand { border: 0; background: none; display: flex; align-items: center; gap: 10px; text-align: left; padding: 0; }
 .brand-mark {
   display: block; width: 42px; height: 42px; border-radius: 13px; overflow: hidden;
@@ -44,10 +45,12 @@ button:disabled { cursor: not-allowed; opacity: .42; }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .brand strong { display: block; font-size: 25px; line-height: 1.05; }
 .brand small, .card small { color: var(--muted); }
-.theme-toggle {
+.theme-toggle, .sound-toggle {
   border: 0; background: var(--card); box-shadow: var(--shadow);
   padding: 10px 12px; border-radius: 14px; font-weight: 800;
 }
+.sound-toggle[aria-pressed="false"] { color: var(--muted); opacity: .72; }
+.sound-toggle { font-size: 12px; white-space: nowrap; }
 .theme-toggle span {
   display: inline-block; width: 16px; height: 16px; border-radius: 50%;
   background: var(--accent); vertical-align: -3px; margin-right: 7px;
@@ -97,6 +100,8 @@ h2 { margin: 4px 0 10px; }
 
 .game-head { display: grid; grid-template-columns: 1.25fr repeat(4, 1fr); align-items: center; text-align: center; padding: 10px; }
 .game-head button, .screen-title button { border: 0; background: none; font-weight: 800; }
+.game-nav { display: grid; gap: 3px; }
+#leaveOnlineGame { color: var(--danger); }
 .game-head small { display: block; }
 .board-card { padding: 12px; }
 .board-wrap { position: relative; }
@@ -186,7 +191,7 @@ input:focus, select:focus { outline: 3px solid var(--soft); border-color: var(--
 .muted { color: var(--muted); text-align: center; }
 .online-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border-radius: 99px; background: var(--soft); color: var(--strong); font-size: 10px; }
 .online-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
-.ranking-filters { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.ranking-filters { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
 .ranking-filters label { display: grid; gap: 5px; }
 .ranking-filters button { border: 0; border-radius: 12px; padding: 12px; font-weight: 900; }
 .ranking-list { padding: 0; overflow: hidden; }
