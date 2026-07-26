@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#2563eb" id="themeMeta">
-  <meta name="description" content="레벨, XP, 통계를 지원하는 모바일 스도쿠 게임">
+  <meta name="description" content="2인 경쟁 멀티플레이와 랭킹을 지원하는 모바일 스도쿠 게임">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -26,11 +26,19 @@
     <button id="themeToggle" class="theme-toggle" type="button" aria-expanded="false"><span id="themeSwatch"></span>색상</button>
   </header>
   <section id="themePanel" class="theme-panel card hidden" aria-label="색상 테마"></section>
+  <section class="layout-panel card" aria-label="화면 배치">
+    <span><small>화면 배치</small><strong id="layoutLabel">자동</strong></span>
+    <div class="segmented" id="layoutControl">
+      <button type="button" data-layout="auto">자동</button>
+      <button type="button" data-layout="portrait">세로</button>
+      <button type="button" data-layout="landscape">가로</button>
+    </div>
+  </section>
 
   <section id="homeScreen" class="screen">
     <div class="hero card">
       <div><small>PLAYER LEVEL</small><div class="level">Lv. <strong id="homeLevel">1</strong></div><p id="homeXpText">0 XP</p></div>
-      <div class="streak"><small>현재 연승</small><strong id="homeStreak">0</strong><span>연승</span></div>
+      <div class="streak"><small>싱글 현재 연승</small><strong id="homeStreak">0</strong><span>연승</span></div>
       <div class="xpbar" role="progressbar" aria-label="레벨 진행도"><span id="homeXpBar"></span></div>
     </div>
     <div class="card">
@@ -42,6 +50,17 @@
     <div class="home-actions">
       <button id="openStats" class="card" type="button"><small>STATISTICS</small><strong>통계 보기</strong></button>
       <button id="openHelp" class="card" type="button"><small>GUIDE</small><strong>게임 설명</strong></button>
+    </div>
+    <div class="card multiplayer-card">
+      <div>
+        <small>ONLINE MULTIPLAYER</small>
+        <h2>함께 즐기는 스도쿠</h2>
+        <p>두 사람이 같은 퍼즐을 풀고, 먼저 완성한 사람이 승리합니다.</p>
+      </div>
+      <div class="multiplayer-actions">
+        <button id="openMultiplayer" class="primary" type="button">멀티플레이</button>
+        <button id="openRankings" class="secondary" type="button">랭킹</button>
+      </div>
     </div>
   </section>
 
@@ -75,10 +94,60 @@
     <div class="hero card compact">
       <div><small>LEVEL</small><div class="level">Lv. <strong id="statsLevel">1</strong></div></div>
       <div><small>누적 XP</small><strong id="statsXp">0</strong></div>
-      <div><small>현재 / 최고 연승</small><strong id="statsStreak">0 / 0</strong></div>
+      <div><small>싱글 현재 / 최고 연승</small><strong id="statsStreak">0 / 0</strong></div>
     </div>
+    <h3 class="stats-section-title">통합 승리 기록</h3>
+    <div id="combinedStatsGrid" class="stats-grid"></div>
+    <h3 class="stats-section-title">싱글 플레이</h3>
     <div id="statsGrid" class="stats-grid"></div>
+    <h3 class="stats-section-title">멀티플레이 · 2인 경쟁</h3>
+    <div id="multiplayerStatsGrid" class="stats-grid"></div>
     <button id="resetStats" class="danger wide" type="button">통계 초기화</button>
+  </section>
+
+  <section id="multiplayerScreen" class="screen hidden" hidden>
+    <div class="screen-title"><button id="multiplayerBack" type="button">‹ 메인</button><h2>멀티플레이</h2></div>
+    <div class="card">
+      <label class="field"><span>닉네임</span><input id="onlineNickname" type="text" minlength="2" maxlength="16" autocomplete="nickname" placeholder="2~16자"></label>
+      <h3>새 방 만들기</h3>
+      <div class="competition-note"><strong>2인 경쟁</strong><small>두 사람이 같은 퍼즐을 풀고, 먼저 완성한 사람이 승리합니다.</small></div>
+      <button id="createRoom" class="primary wide" type="button">선택한 난이도로 방 만들기</button>
+    </div>
+    <div class="card">
+      <h3>방 코드로 참가</h3>
+      <div class="join-row">
+        <input id="roomCodeInput" class="room-code-input" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="8자리 코드">
+        <button id="joinRoom" class="secondary" type="button">참가</button>
+      </div>
+    </div>
+    <p id="onlineMessage" class="message" aria-live="polite"></p>
+  </section>
+
+  <section id="lobbyScreen" class="screen hidden" hidden>
+    <div class="screen-title"><button id="leaveLobby" type="button">‹ 나가기</button><h2>대기실</h2></div>
+    <div class="card lobby-code">
+      <small>ROOM CODE</small>
+      <strong id="lobbyRoomCode">--------</strong>
+      <button id="copyRoomCode" class="secondary" type="button">코드 복사</button>
+    </div>
+    <div class="card">
+      <div class="lobby-meta"><span><small>모드</small><strong id="lobbyMode"></strong></span><span><small>난이도</small><strong id="lobbyDifficulty"></strong></span></div>
+      <h3>참가자 <span id="lobbyCount">0 / 2</span></h3>
+      <div id="lobbyPlayers" class="player-list"></div>
+      <button id="startOnlineGame" class="primary wide hidden" type="button">게임 시작</button>
+      <p id="lobbyHint" class="muted">방장이 게임을 시작할 때까지 기다려 주세요.</p>
+    </div>
+    <p id="lobbyMessage" class="message" aria-live="polite"></p>
+  </section>
+
+  <section id="rankingsScreen" class="screen hidden" hidden>
+    <div class="screen-title"><button id="rankingsBack" type="button">‹ 메인</button><h2>온라인 랭킹</h2></div>
+    <div class="card ranking-filters">
+      <label><span>난이도</span><select id="rankingDifficulty"><option value="">전체</option></select></label>
+      <button id="refreshRankings" class="secondary" type="button">새로고침</button>
+    </div>
+    <div id="rankingsList" class="card ranking-list"></div>
+    <p id="rankingsMessage" class="message" aria-live="polite"></p>
   </section>
 
   <section id="resultScreen" class="screen hidden" hidden>
