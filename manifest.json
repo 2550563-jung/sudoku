@@ -1,0 +1,10 @@
+{
+  "name": "스도쿠",
+  "short_name": "스도쿠",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#2563eb",
+  "lang": "ko",
+  "description": "모바일과 PC에서 즐기는 스도쿠"
+}
