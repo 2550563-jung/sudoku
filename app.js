@@ -24,7 +24,17 @@ function fill(b,i=0){while(i<81&&b[i])i++;if(i>=81)return true;let r=Math.floor(
 function makeGame(d){let sol=Array(81).fill(0);fill(sol);let p=[...sol],holes=DIFFS.find(x=>x[0]===d)[2];for(const i of shuffle([...Array(81).keys()]).slice(0,holes))p[i]=0;let hints=d==="extreme"?0:1+Math.floor(Math.random()*4);return {solution:sol,puzzle:p,values:[...p],given:p.map(Boolean),notes:Array.from({length:81},()=>[]),selected:-1,mistakes:0,seconds:0,paused:false,notesMode:false,history:[],difficulty:d,finished:false,hints,hintsUsed:0,selectedHintUsed:false,startedAt:Date.now()}}
 function saveGame(){if(st&&!st.finished)localStorage.setItem(GAME_KEY,JSON.stringify(st))}
 function savedGame(){let g=loadJSON(GAME_KEY,null);return g&&g.solution?.length===81&&!g.finished?g:null}
-function show(id){["homeScreen","gameScreen","statsScreen","resultScreen"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==id));currentScreen=id;$("#themePanel").classList.add("hidden");if(id==="homeScreen")renderHome();if(id==="statsScreen")renderStats()}
+function show(id){
+  ["homeScreen","gameScreen","statsScreen","resultScreen"].forEach(x=>{
+    const el=$("#"+x), hide=x!==id;
+    el.classList.toggle("hidden",hide);
+    el.hidden=hide;
+  });
+  currentScreen=id;
+  $("#themePanel").classList.add("hidden");
+  if(id==="homeScreen")renderHome();
+  if(id==="statsScreen")renderStats();
+}
 function renderHome(){let l=levelInfo();$("#homeLevel").textContent=l.level;$("#homeXpText").textContent=`${profile.xp.toLocaleString()} XP · 다음 레벨까지 ${l.need-l.cur} XP`;$("#homeXpBar").style.width=`${l.cur/l.need*100}%`;$("#homeStreak").textContent=profile.streak;$("#continueGame").classList.toggle("hidden",!savedGame());document.querySelectorAll(".difficulty").forEach(b=>b.classList.toggle("active",b.dataset.d===selectedDifficulty))}
 function startNew(force=false){if(savedGame()&&!force){confirmModal("새 게임을 시작할까요?","현재 진행 중인 게임이 삭제되고 새 게임이 시작됩니다.","새 게임 시작",()=>startNew(true));return}st=makeGame(selectedDifficulty);localStorage.removeItem(GAME_KEY);saveGame();show("gameScreen");renderGame()}
 function continueGame(){st=savedGame();if(!st)return renderHome();st.paused=false;show("gameScreen");renderGame()}
@@ -50,6 +60,6 @@ for(let n=1;n<=9;n++){let b=document.createElement("button");b.textContent=n;b.o
 $("#themeToggle").onclick=()=>$("#themePanel").classList.toggle("hidden");$("#homeButton").onclick=()=>show("homeScreen");$("#backHome").onclick=()=>{if(st&&!st.finished)saveGame();show("homeScreen")};$("#statsBack").onclick=()=>show("homeScreen");$("#startGame").onclick=()=>startNew();$("#continueGame").onclick=continueGame;$("#openStats").onclick=()=>show("statsScreen");$("#openHelp").onclick=guide;
 $("#undo").onclick=undo;$("#erase").onclick=()=>place(0);$("#notes").onclick=()=>{if(st){st.notesMode=!st.notesMode;renderGame();saveGame()}};$("#pause").onclick=()=>{if(st&&!st.finished){st.paused=!st.paused;renderGame();saveGame()}};$("#resumeGame").onclick=()=>{st.paused=false;renderGame();saveGame()};$("#hint").onclick=useHint;
 $("#resultHome").onclick=()=>show("homeScreen");$("#resultAgain").onclick=()=>{selectedDifficulty=st.difficulty;startNew(true)};$("#resetStats").onclick=()=>confirmModal("통계를 초기화할까요?","누적 통계, XP, 레벨, 연승 기록이 모두 삭제됩니다.","초기화",()=>{profile=emptyProfile();saveProfile();renderStats()});
-applyTheme(+(localStorage.getItem(THEME_KEY)||0));renderHome();
+applyTheme(+(localStorage.getItem(THEME_KEY)||0));show("homeScreen");
 setInterval(()=>{if(currentScreen==="gameScreen"&&st&&!st.paused&&!st.finished){st.seconds++;$("#timer").textContent=fmt(st.seconds);if(st.seconds%5===0)saveGame()}},1000);
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));

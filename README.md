@@ -37,4 +37,8 @@ GitHub Pages에서 별도 서버 없이 실행되는 모바일 친화적인 스�
 
 게임 진행, 통계, XP, 레벨 계산용 누적 XP, 연승 및 테마는 브라우저 `localStorage`에 저장됩니다.
 
-큰 업데이트 시 `sw.js`의 `CACHE` 값을 변경해 이전 Service Worker 캐시가 오래 남는 문제를 줄입니다. 현재 캐시 버전은 `sudoku-v5`입니다.
+큰 업데이트 시 `sw.js`의 `CACHE` 값을 변경해 이전 Service Worker 캐시가 오래 남는 문제를 줄입니다. 현재 캐시 버전은 `sudoku-v7`입니다.
+
+## 앱 아이콘
+
+PWA 설치, Android 홈 화면, iOS Apple Touch Icon, 브라우저 favicon용 아이콘이 `icons/`와 `favicon.ico`에 포함되어 있습니다.

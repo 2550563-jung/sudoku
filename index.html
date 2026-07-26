@@ -6,6 +6,13 @@
   <meta name="theme-color" content="#2563eb" id="themeMeta">
   <meta name="description" content="모바일과 PC에서 즐기는 레벨·통계 기반 스도쿠 웹게임">
   <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="스도쿠">
   <link rel="stylesheet" href="style.css">
   <title>스도쿠</title>
 </head>
@@ -35,7 +42,7 @@
     </div>
   </section>
 
-  <section id="gameScreen" class="screen hidden">
+  <section id="gameScreen" class="screen hidden" hidden>
     <div class="game-head card">
       <button id="backHome">← 메인</button>
       <div><small>난이도</small><strong id="difficultyLabel">보통</strong></div>
@@ -55,14 +62,14 @@
     </div>
   </section>
 
-  <section id="statsScreen" class="screen hidden">
+  <section id="statsScreen" class="screen hidden" hidden>
     <div class="screen-title"><button id="statsBack">← 메인</button><h2>플레이 통계</h2></div>
     <div class="hero card compact"><div><small>LEVEL</small><div class="level">Lv. <strong id="statsLevel">1</strong></div></div><div><small>누적 XP</small><strong id="statsXp">0</strong></div><div><small>현재 / 최고 연승</small><strong id="statsStreak">0 / 0</strong></div></div>
     <div id="statsGrid" class="stats-grid"></div>
     <button id="resetStats" class="danger wide">통계 초기화</button>
   </section>
 
-  <section id="resultScreen" class="screen hidden">
+  <section id="resultScreen" class="screen hidden" hidden>
     <div class="card result-card"><small id="resultEyebrow">RESULT</small><h2 id="resultTitle"></h2><p id="resultSubtitle"></p><div id="resultGrid" class="result-grid"></div>
     <button id="resultHome" class="primary wide">메인으로</button><button id="resultAgain" class="secondary wide">같은 난이도로 다시하기</button></div>
   </section>
