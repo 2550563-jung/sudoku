@@ -1,6 +1,6 @@
-const CACHE = "sudoku-v14";
+const CACHE = "sudoku-v15";
 const ASSETS = [
-  "./", "./index.html", "./style.css?v=14", "./app.js?v=14", "./manifest.json",
+  "./", "./index.html", "./style.css?v=15", "./app.js?v=15", "./manifest.json",
   "./favicon.ico", "./favicon-16.png", "./favicon-32.png", "./apple-touch-icon.png",
   "./icon-48.png", "./icon-48.png?v=12", "./icon-72.png", "./icon-96.png", "./icon-192.png", "./icon-512.png",
   "./icon-maskable-192.png", "./icon-maskable-512.png"
