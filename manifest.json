@@ -1,10 +1,11 @@
 {
-  "name": "스도쿠",
+  "name": "스도쿠 - 숫자 퍼즐",
   "short_name": "스도쿠",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#2563eb",
   "lang": "ko",
-  "description": "모바일과 PC에서 즐기는 스도쿠"
+  "description": "레벨, XP, 통계와 다양한 난이도를 지원하는 모바일 스도쿠 웹게임"
 }
