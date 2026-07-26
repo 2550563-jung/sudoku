@@ -1,44 +1,37 @@
 # Sudoku Web
 
-GitHub Pages에서 별도 서버 없이 실행되는 모바일 친화적인 스도쿠 웹게임입니다.
+별도 서버 없이 GitHub Pages에서 실행되는 모바일 친화형 스도쿠 웹게임입니다.
 
 ## 주요 기능
 
-- 7단계 난이도: 매우 쉬움 / 쉬움 / 보통 / 어려움 / 전문가 / 마스터 / 극한
-- 자동 저장 및 미완료 게임 이어하기
-- 새 게임 시작 전 진행 중 게임 삭제 확인
+- 매우 쉬움부터 극한까지 7단계 난이도
+- 모든 난이도에서 유일한 해답이 보장되는 퍼즐
+- 자동 저장과 미완료 게임 이어하기
+- 새 게임 시작 전 진행 중인 게임 삭제 확인
+- 메모, 지우기, 되돌리기, 일시정지, 이어하기
 - 실수 3회 시 즉시 실패
-- 메모, 지우기, 되돌리기, 일시정지, 타이머
-- 극한을 제외한 게임마다 무작위 1~4개 힌트
-- 힌트 1% 실패 확률 및 사용 횟수 소모
-- 점수, XP, 레벨, 현재/최고 연승
-- 누적 플레이 통계
-- 15종 색상 테마 및 브라우저 저장
-- 모바일/Galaxy 대응 반응형 UI
-- PWA manifest 및 Service Worker 오프라인 캐시
+- 극한을 제외한 게임마다 무작위 1~4개 힌트와 1% 힌트 실패 확률
+- 점수, XP, 레벨, 현재/최고 연승 및 누적 통계
+- 15가지 색상 테마
+- Galaxy를 포함한 모바일 세로·가로 화면 및 safe area 대응
+- Web App Manifest와 Service Worker를 이용한 PWA 설치 및 오프라인 실행
 
-## 파일
+## 실행
 
-- `index.html`
-- `style.css`
-- `app.js`
-- `manifest.json`
-- `sw.js`
+정적 파일만 사용하므로 저장소 루트를 웹 서버로 제공하면 됩니다. GitHub Pages 배포 주소는 다음과 같습니다.
 
-## GitHub Pages
-
-저장소 `Settings → Pages`에서 `Deploy from a branch`를 선택하고 `main` 브랜치의 `/(root)`를 배포 대상으로 설정합니다.
-
-배포 주소:
-
-`https://2550563-jung.github.io/sudoku/`
+<https://2550563-jung.github.io/sudoku/>
 
 ## 저장 데이터
 
-게임 진행, 통계, XP, 레벨 계산용 누적 XP, 연승 및 테마는 브라우저 `localStorage`에 저장됩니다.
+기존 사용자 데이터와 호환되는 다음 `localStorage` 키를 사용합니다.
 
-큰 업데이트 시 `sw.js`의 `CACHE` 값을 변경해 이전 Service Worker 캐시가 오래 남는 문제를 줄입니다. 현재 캐시 버전은 `sudoku-v7`입니다.
+- `sudoku-game-v5`: 진행 중인 게임
+- `sudoku-profile-v5`: 통계, XP, 레벨, 연승
+- `sudoku-theme-v5`: 선택한 색상 테마
 
-## 앱 아이콘
+손상되거나 이전 형식인 저장 데이터는 가능한 범위에서 정규화해 복구합니다.
 
-PWA 설치, Android 홈 화면, iOS Apple Touch Icon, 브라우저 favicon용 아이콘이 `icons/`와 `favicon.ico`에 포함되어 있습니다.
+## PWA
+
+아이콘 파일은 모두 저장소 루트에 있으며 `manifest.json`, `index.html`, `sw.js`도 루트 상대 경로로 참조합니다. Service Worker 캐시 버전은 `sudoku-v8`입니다. 배포 후 기존 홈 화면 바로가기는 삭제하고 Chrome에서 사이트를 다시 연 뒤 앱을 재설치해야 새 아이콘이 확실히 적용됩니다.

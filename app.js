@@ -1,65 +1,703 @@
-const $=s=>document.querySelector(s);
-const DIFFS=[
- ["veryEasy","매우 쉬움",32,1],["easy","쉬움",38,1.15],["medium","보통",45,1.35],["hard","어려움",50,1.65],
- ["expert","전문가",54,2],["master","마스터",57,2.4],["extreme","극한",60,3]
+"use strict";
+
+const $ = selector => document.querySelector(selector);
+const DIFFICULTIES = [
+  ["veryEasy", "매우 쉬움", 32, 1],
+  ["easy", "쉬움", 38, 1.15],
+  ["medium", "보통", 45, 1.35],
+  ["hard", "어려움", 50, 1.65],
+  ["expert", "전문가", 54, 2],
+  ["master", "마스터", 57, 2.4],
+  ["extreme", "극한", 60, 3]
 ];
-const THEMES=[
- ["파랑","#2563eb","#dbeafe","#1d4ed8"],["하늘","#0284c7","#e0f2fe","#0369a1"],["청록","#0f766e","#ccfbf1","#115e59"],
- ["민트","#059669","#d1fae5","#047857"],["초록","#16a34a","#dcfce7","#15803d"],["라임","#65a30d","#ecfccb","#4d7c0f"],
- ["노랑","#ca8a04","#fef9c3","#a16207"],["주황","#ea580c","#ffedd5","#c2410c"],["빨강","#dc2626","#fee2e2","#b91c1c"],
- ["핑크","#db2777","#fce7f3","#be185d"],["보라","#7c3aed","#ede9fe","#6d28d9"],["남색","#4338ca","#e0e7ff","#3730a3"],
- ["갈색","#92400e","#fef3c7","#78350f"],["회색","#64748b","#e2e8f0","#475569"],["검정","#0f172a","#e2e8f0","#020617"]
+const THEMES = [
+  ["파랑", "#2563eb", "#dbeafe", "#1d4ed8"], ["하늘", "#0284c7", "#e0f2fe", "#0369a1"],
+  ["청록", "#0f766e", "#ccfbf1", "#115e59"], ["민트", "#059669", "#d1fae5", "#047857"],
+  ["초록", "#16a34a", "#dcfce7", "#15803d"], ["라임", "#65a30d", "#ecfccb", "#4d7c0f"],
+  ["노랑", "#ca8a04", "#fef9c3", "#a16207"], ["주황", "#ea580c", "#ffedd5", "#c2410c"],
+  ["빨강", "#dc2626", "#fee2e2", "#b91c1c"], ["분홍", "#db2777", "#fce7f3", "#be185d"],
+  ["보라", "#7c3aed", "#ede9fe", "#6d28d9"], ["남색", "#4338ca", "#e0e7ff", "#3730a3"],
+  ["갈색", "#92400e", "#fef3c7", "#78350f"], ["회색", "#64748b", "#e2e8f0", "#475569"],
+  ["검정", "#0f172a", "#e2e8f0", "#020617"]
 ];
-const GAME_KEY="sudoku-game-v5", PROFILE_KEY="sudoku-profile-v5", THEME_KEY="sudoku-theme-v5";
-const emptyProfile=()=>({played:0,wins:0,totalScore:0,totalWinSeconds:0,maxSeconds:0,maxScore:0,maxDifficulty:-1,perfectWins:0,streak:0,bestStreak:0,xp:0});
-let profile=loadJSON(PROFILE_KEY,emptyProfile()), selectedDifficulty="medium", st=null, currentScreen="home";
-function loadJSON(k,fallback){try{return JSON.parse(localStorage.getItem(k))||fallback}catch{return fallback}}
-function saveProfile(){localStorage.setItem(PROFILE_KEY,JSON.stringify(profile))}
-function diff(){return DIFFS.find(x=>x[0]===(st?.difficulty||selectedDifficulty))||DIFFS[2]}
-function fmt(s){s=Math.max(0,Math.floor(s||0));return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
-function levelInfo(){let level=1,x=profile.xp;while(x>=level*500){x-=level*500;level++}return {level,cur:x,need:level*500}}
-function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function valid(b,r,c,n){for(let i=0;i<9;i++)if(b[r*9+i]===n||b[i*9+c]===n)return false;let br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;for(let y=0;y<3;y++)for(let x=0;x<3;x++)if(b[(br+y)*9+bc+x]===n)return false;return true}
-function fill(b,i=0){while(i<81&&b[i])i++;if(i>=81)return true;let r=Math.floor(i/9),c=i%9;for(const n of shuffle([1,2,3,4,5,6,7,8,9]))if(valid(b,r,c,n)){b[i]=n;if(fill(b,i+1))return true;b[i]=0}return false}
-function makeGame(d){let sol=Array(81).fill(0);fill(sol);let p=[...sol],holes=DIFFS.find(x=>x[0]===d)[2];for(const i of shuffle([...Array(81).keys()]).slice(0,holes))p[i]=0;let hints=d==="extreme"?0:1+Math.floor(Math.random()*4);return {solution:sol,puzzle:p,values:[...p],given:p.map(Boolean),notes:Array.from({length:81},()=>[]),selected:-1,mistakes:0,seconds:0,paused:false,notesMode:false,history:[],difficulty:d,finished:false,hints,hintsUsed:0,selectedHintUsed:false,startedAt:Date.now()}}
-function saveGame(){if(st&&!st.finished)localStorage.setItem(GAME_KEY,JSON.stringify(st))}
-function savedGame(){let g=loadJSON(GAME_KEY,null);return g&&g.solution?.length===81&&!g.finished?g:null}
-function show(id){
-  ["homeScreen","gameScreen","statsScreen","resultScreen"].forEach(x=>{
-    const el=$("#"+x), hide=x!==id;
-    el.classList.toggle("hidden",hide);
-    el.hidden=hide;
-  });
-  currentScreen=id;
-  $("#themePanel").classList.add("hidden");
-  if(id==="homeScreen")renderHome();
-  if(id==="statsScreen")renderStats();
+const GAME_KEY = "sudoku-game-v5";
+const PROFILE_KEY = "sudoku-profile-v5";
+const THEME_KEY = "sudoku-theme-v5";
+
+const emptyProfile = () => ({
+  played: 0, wins: 0, totalScore: 0, totalWinSeconds: 0, maxSeconds: 0,
+  maxScore: 0, maxDifficulty: -1, perfectWins: 0, streak: 0, bestStreak: 0, xp: 0
+});
+
+let profile = normalizedProfile(loadJSON(PROFILE_KEY, null));
+let selectedDifficulty = "medium";
+let state = null;
+let currentScreen = "homeScreen";
+
+function loadJSON(key, fallback) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    return value ?? fallback;
+  } catch {
+    return fallback;
+  }
 }
-function renderHome(){let l=levelInfo();$("#homeLevel").textContent=l.level;$("#homeXpText").textContent=`${profile.xp.toLocaleString()} XP · 다음 레벨까지 ${l.need-l.cur} XP`;$("#homeXpBar").style.width=`${l.cur/l.need*100}%`;$("#homeStreak").textContent=profile.streak;$("#continueGame").classList.toggle("hidden",!savedGame());document.querySelectorAll(".difficulty").forEach(b=>b.classList.toggle("active",b.dataset.d===selectedDifficulty))}
-function startNew(force=false){if(savedGame()&&!force){confirmModal("새 게임을 시작할까요?","현재 진행 중인 게임이 삭제되고 새 게임이 시작됩니다.","새 게임 시작",()=>startNew(true));return}st=makeGame(selectedDifficulty);localStorage.removeItem(GAME_KEY);saveGame();show("gameScreen");renderGame()}
-function continueGame(){st=savedGame();if(!st)return renderHome();st.paused=false;show("gameScreen");renderGame()}
-function noteGrid(ns){let d=document.createElement("div");d.className="notes-grid";for(let n=1;n<=9;n++){let s=document.createElement("span");s.textContent=ns.includes(n)?n:"";d.appendChild(s)}return d}
-function renderGame(){if(!st)return;let board=$("#board");board.innerHTML="";let sr=st.selected>=0?Math.floor(st.selected/9):-1,sc=st.selected>=0?st.selected%9:-1,sv=st.selected>=0?st.values[st.selected]:0;st.values.forEach((v,i)=>{let b=document.createElement("button"),r=Math.floor(i/9),c=i%9;b.className="cell";if(st.given[i])b.classList.add("given");if(c===2||c===5)b.classList.add("br");if(r===2||r===5)b.classList.add("bb");if(st.selected>=0){let box=Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3);if(r===sr||c===sc||box)b.classList.add("peer");if(sv&&v===sv)b.classList.add("same");if(i===st.selected)b.classList.add("selected")}if(v&&!st.given[i]&&v!==st.solution[i])b.classList.add("bad");if(v)b.textContent=v;else if(st.notes[i]?.length)b.appendChild(noteGrid(st.notes[i]));b.onclick=()=>{if(!st.paused&&!st.finished){st.selected=i;renderGame();saveGame()}};board.appendChild(b)});$("#difficultyLabel").textContent=diff()[1];$("#mistakes").textContent=`${st.mistakes} / 3`;$("#timer").textContent=fmt(st.seconds);$("#hintCount").textContent=st.difficulty==="extreme"?"없음":st.hints;$("#pauseOverlay").classList.toggle("hidden",!st.paused);$("#notes").classList.toggle("active",st.notesMode);$("#hint").disabled=st.difficulty==="extreme"||st.hints<=0}
-function hist(i){st.history.push({i,v:st.values[i],n:[...(st.notes[i]||[])]});if(st.history.length>100)st.history.shift()}
-function clearNotes(i,n){let r0=Math.floor(i/9),c0=i%9;for(let x=0;x<81;x++){let r=Math.floor(x/9),c=x%9,box=Math.floor(r/3)===Math.floor(r0/3)&&Math.floor(c/3)===Math.floor(c0/3);if(r===r0||c===c0||box)st.notes[x]=(st.notes[x]||[]).filter(v=>v!==n)}}
-function place(n){if(!st||st.paused||st.finished||st.selected<0||st.given[st.selected])return;let i=st.selected;hist(i);if(st.notesMode&&n){st.values[i]=0;let set=new Set(st.notes[i]||[]);set.has(n)?set.delete(n):set.add(n);st.notes[i]=[...set].sort();renderGame();saveGame();return}st.notes[i]=[];st.values[i]=n;if(n&&n!==st.solution[i]){st.mistakes++;$("#message").textContent="틀린 숫자입니다.";if(st.mistakes>=3)return finish(false)}else{$("#message").textContent="";if(n)clearNotes(i,n)}if(st.values.every((v,x)=>v===st.solution[x]))return finish(true);renderGame();saveGame()}
-function undo(){if(!st?.history.length||st.paused||st.finished)return;let x=st.history.pop();st.values[x.i]=x.v;st.notes[x.i]=x.n;st.selected=x.i;renderGame();saveGame()}
-function useHint(){if(!st||st.paused||st.finished||st.difficulty==="extreme"||st.hints<=0)return;let candidates=st.values.map((v,i)=>(!st.given[i]&&v!==st.solution[i])?i:-1).filter(i=>i>=0);if(!candidates.length)return;let i=-1;if(!st.selectedHintUsed&&st.selected>=0&&candidates.includes(st.selected)){i=st.selected;st.selectedHintUsed=true}else{i=candidates[Math.floor(Math.random()*candidates.length)]}st.hints--;st.hintsUsed++;if(Math.random()<.01){$("#message").textContent="힌트가 실패했습니다. 힌트 1개가 소모되었습니다.";renderGame();saveGame();return}hist(i);st.selected=i;st.values[i]=st.solution[i];st.notes[i]=[];clearNotes(i,st.solution[i]);$("#message").textContent="힌트로 한 칸을 공개했습니다.";if(st.values.every((v,x)=>v===st.solution[x]))return finish(true);renderGame();saveGame()}
-function score(){let mult=diff()[3],base=1000*mult,timePenalty=Math.min(650,st.seconds*.55),mistakePenalty=st.mistakes*130,hintPenalty=st.hintsUsed*90;return Math.max(100,Math.round(base-timePenalty-mistakePenalty-hintPenalty))}
-function finish(win){st.finished=true;profile.played++;let sc=win?score():0,xp=win?Math.max(40,Math.round(sc*.22)):10;if(win){profile.wins++;profile.totalScore+=sc;profile.totalWinSeconds+=st.seconds;profile.maxSeconds=Math.max(profile.maxSeconds,st.seconds);profile.maxScore=Math.max(profile.maxScore,sc);profile.maxDifficulty=Math.max(profile.maxDifficulty,DIFFS.findIndex(x=>x[0]===st.difficulty));if(st.mistakes===0)profile.perfectWins++;profile.streak++;profile.bestStreak=Math.max(profile.bestStreak,profile.streak)}else profile.streak=0;profile.xp+=xp;saveProfile();localStorage.removeItem(GAME_KEY);renderResult(win,sc,xp);show("resultScreen")}
-function renderResult(win,sc,xp){$("#resultEyebrow").textContent=win?"CLEAR":"GAME OVER";$("#resultTitle").textContent=win?"완성했습니다!":"게임이 종료되었습니다";$("#resultSubtitle").textContent=win?`+${xp} XP를 획득했습니다.`:"실수 3회로 실패했습니다. 플레이 기록과 XP는 반영되었습니다.";let data=[["난이도",diff()[1]],["점수",sc.toLocaleString()],["완료 시간",fmt(st.seconds)],["실수",`${st.mistakes}회`],["힌트 사용",`${st.hintsUsed}회`],["획득 XP",`+${xp}`]];$("#resultGrid").innerHTML=data.map(x=>`<div class="result-item"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join("")}
-function renderStats(){let l=levelInfo(),avgScore=profile.wins?Math.round(profile.totalScore/profile.wins):0,avgTime=profile.wins?Math.round(profile.totalWinSeconds/profile.wins):0;$("#statsLevel").textContent=l.level;$("#statsXp").textContent=profile.xp.toLocaleString();$("#statsStreak").textContent=`${profile.streak} / ${profile.bestStreak}`;let maxD=profile.maxDifficulty>=0?DIFFS[profile.maxDifficulty][1]:"없음",items=[["해본 횟수",profile.played],["성공 횟수",profile.wins],["평균 점수",avgScore.toLocaleString()],["평균 완료 시간",fmt(avgTime)],["최대 시간",fmt(profile.maxSeconds)],["최대 점수",profile.maxScore.toLocaleString()],["성공한 최대 난이도",maxD],["실수 없이 성공",profile.perfectWins],["현재 연승",profile.streak],["최고 연승",profile.bestStreak],["레벨",l.level],["누적 XP",profile.xp.toLocaleString()]];$("#statsGrid").innerHTML=items.map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join("")}
-function modal(title,html,actions){$("#modalTitle").textContent=title;$("#modalText").innerHTML=html;$("#modalActions").innerHTML="";actions.forEach(a=>{let b=document.createElement("button");b.textContent=a[0];b.className=a[2]||"";b.onclick=()=>{closeModal();a[1]?.()};$("#modalActions").appendChild(b)});$("#modal").classList.remove("hidden")}
-function closeModal(){$("#modal").classList.add("hidden")}
-function confirmModal(t,x,ok,fn){modal(t,`<p>${x}</p>`,[["취소",null,"secondary"],[ok,fn,"primary"]])}
-function guide(){modal("게임 설명",`<div class="guide"><h3>기본 규칙</h3><p>각 행, 열, 3×3 영역에 1부터 9까지 숫자가 한 번씩 들어가도록 빈칸을 채웁니다.</p><h3>실수와 종료</h3><p>틀린 숫자를 입력하면 실수가 1회 증가하며, 3회가 되면 즉시 실패합니다.</p><h3>힌트</h3><p>극한을 제외하면 게임마다 1~4개의 힌트가 주어집니다. 처음에는 선택한 빈칸에 사용할 수 있고, 이후에는 필요한 칸을 무작위로 공개합니다. 각 힌트는 1% 확률로 실패하며 실패해도 소모됩니다. 극한에는 힌트가 없습니다.</p><h3>점수 · XP · 레벨</h3><p>높은 난이도일수록 기본 점수가 높습니다. 완료 시간, 실수, 힌트 사용량이 최종 점수에 반영됩니다. 성공 시 점수에 따라 XP를 얻고 레벨이 올라갑니다.</p><h3>연승</h3><p>성공하면 연승이 증가하고 실패하면 현재 연승이 0으로 초기화됩니다.</p></div>`,[["확인",null,"primary"]])}
-function applyTheme(i){let t=THEMES[i]||THEMES[0],r=document.documentElement.style;r.setProperty("--accent",t[1]);r.setProperty("--soft",t[2]);r.setProperty("--strong",t[3]);$("#themeMeta").content=t[1];$("#themeSwatch").style.background=t[1];localStorage.setItem(THEME_KEY,i);document.querySelectorAll(".theme-chip").forEach((e,x)=>e.classList.toggle("active",x===i))}
-DIFFS.forEach(d=>{let b=document.createElement("button");b.className="difficulty";b.dataset.d=d[0];b.textContent=d[1];b.onclick=()=>{selectedDifficulty=d[0];renderHome()};$("#difficultyGrid").appendChild(b)});
-THEMES.forEach((t,i)=>{let b=document.createElement("button");b.className="theme-chip";b.title=t[0];b.style.background=t[1];b.onclick=()=>applyTheme(i);$("#themePanel").appendChild(b)});
-for(let n=1;n<=9;n++){let b=document.createElement("button");b.textContent=n;b.onclick=()=>place(n);$("#numberPad").appendChild(b)}
-$("#themeToggle").onclick=()=>$("#themePanel").classList.toggle("hidden");$("#homeButton").onclick=()=>show("homeScreen");$("#backHome").onclick=()=>{if(st&&!st.finished)saveGame();show("homeScreen")};$("#statsBack").onclick=()=>show("homeScreen");$("#startGame").onclick=()=>startNew();$("#continueGame").onclick=continueGame;$("#openStats").onclick=()=>show("statsScreen");$("#openHelp").onclick=guide;
-$("#undo").onclick=undo;$("#erase").onclick=()=>place(0);$("#notes").onclick=()=>{if(st){st.notesMode=!st.notesMode;renderGame();saveGame()}};$("#pause").onclick=()=>{if(st&&!st.finished){st.paused=!st.paused;renderGame();saveGame()}};$("#resumeGame").onclick=()=>{st.paused=false;renderGame();saveGame()};$("#hint").onclick=useHint;
-$("#resultHome").onclick=()=>show("homeScreen");$("#resultAgain").onclick=()=>{selectedDifficulty=st.difficulty;startNew(true)};$("#resetStats").onclick=()=>confirmModal("통계를 초기화할까요?","누적 통계, XP, 레벨, 연승 기록이 모두 삭제됩니다.","초기화",()=>{profile=emptyProfile();saveProfile();renderStats()});
-applyTheme(+(localStorage.getItem(THEME_KEY)||0));show("homeScreen");
-setInterval(()=>{if(currentScreen==="gameScreen"&&st&&!st.paused&&!st.finished){st.seconds++;$("#timer").textContent=fmt(st.seconds);if(st.seconds%5===0)saveGame()}},1000);
-if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+
+function normalizedProfile(value) {
+  const base = emptyProfile();
+  if (!value || typeof value !== "object") return base;
+  for (const key of Object.keys(base)) {
+    const number = Number(value[key]);
+    base[key] = Number.isFinite(number) ? Math.max(key === "maxDifficulty" ? -1 : 0, number) : base[key];
+  }
+  return base;
+}
+
+function saveProfile() {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+function difficulty() {
+  return DIFFICULTIES.find(item => item[0] === (state?.difficulty || selectedDifficulty)) || DIFFICULTIES[2];
+}
+
+function formatTime(seconds) {
+  const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+  return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+}
+
+function levelInfo() {
+  let level = 1;
+  let current = profile.xp;
+  while (current >= level * 500) {
+    current -= level * 500;
+    level += 1;
+  }
+  return { level, current, needed: level * 500 };
+}
+
+function shuffle(source) {
+  const result = [...source];
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function isValid(board, row, column, number) {
+  for (let index = 0; index < 9; index += 1) {
+    if (board[row * 9 + index] === number || board[index * 9 + column] === number) return false;
+  }
+  const boxRow = Math.floor(row / 3) * 3;
+  const boxColumn = Math.floor(column / 3) * 3;
+  for (let y = 0; y < 3; y += 1) {
+    for (let x = 0; x < 3; x += 1) {
+      if (board[(boxRow + y) * 9 + boxColumn + x] === number) return false;
+    }
+  }
+  return true;
+}
+
+function fillBoard(board, position = 0) {
+  while (position < 81 && board[position]) position += 1;
+  if (position >= 81) return true;
+  const row = Math.floor(position / 9);
+  const column = position % 9;
+  for (const number of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+    if (!isValid(board, row, column, number)) continue;
+    board[position] = number;
+    if (fillBoard(board, position + 1)) return true;
+    board[position] = 0;
+  }
+  return false;
+}
+
+function solveBoard(board) {
+  let position = -1;
+  let bestCandidates = null;
+  for (let i = 0; i < 81; i += 1) {
+    if (board[i]) continue;
+    const row = Math.floor(i / 9);
+    const column = i % 9;
+    const candidates = [];
+    for (let number = 1; number <= 9; number += 1) {
+      if (isValid(board, row, column, number)) candidates.push(number);
+    }
+    if (!candidates.length) return false;
+    if (!bestCandidates || candidates.length < bestCandidates.length) {
+      position = i;
+      bestCandidates = candidates;
+      if (candidates.length === 1) break;
+    }
+  }
+  if (position < 0) return true;
+  for (const number of shuffle(bestCandidates)) {
+    board[position] = number;
+    if (solveBoard(board)) return true;
+    board[position] = 0;
+  }
+  return false;
+}
+
+function countSolutions(board, limit = 2) {
+  let position = -1;
+  let bestCandidates = null;
+  for (let i = 0; i < 81; i += 1) {
+    if (board[i]) continue;
+    const row = Math.floor(i / 9);
+    const column = i % 9;
+    const candidates = [];
+    for (let number = 1; number <= 9; number += 1) {
+      if (isValid(board, row, column, number)) candidates.push(number);
+    }
+    if (!candidates.length) return 0;
+    if (!bestCandidates || candidates.length < bestCandidates.length) {
+      position = i;
+      bestCandidates = candidates;
+      if (candidates.length === 1) break;
+    }
+  }
+  if (position < 0) return 1;
+  let count = 0;
+  for (const number of bestCandidates) {
+    board[position] = number;
+    count += countSolutions(board, limit - count);
+    board[position] = 0;
+    if (count >= limit) return count;
+  }
+  return count;
+}
+
+const BASE_PUZZLE = (
+  "000000010" +
+  "400000000" +
+  "020000000" +
+  "000050407" +
+  "008000300" +
+  "001090000" +
+  "300400200" +
+  "050100000" +
+  "000806000"
+).split("").map(Number);
+
+function transformedPair(puzzle, solution) {
+  const digitMap = [0, ...shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])];
+  const bands = shuffle([0, 1, 2]);
+  const stacks = shuffle([0, 1, 2]);
+  const rows = bands.flatMap(band => shuffle([0, 1, 2]).map(row => band * 3 + row));
+  const columns = stacks.flatMap(stack => shuffle([0, 1, 2]).map(column => stack * 3 + column));
+  const transpose = Math.random() < 0.5;
+  const transform = board => {
+    const result = Array(81).fill(0);
+    for (let row = 0; row < 9; row += 1) {
+      for (let column = 0; column < 9; column += 1) {
+        const sourceRow = transpose ? columns[column] : rows[row];
+        const sourceColumn = transpose ? rows[row] : columns[column];
+        result[row * 9 + column] = digitMap[board[sourceRow * 9 + sourceColumn]];
+      }
+    }
+    return result;
+  };
+  return [transform(puzzle), transform(solution)];
+}
+
+function createGame(difficultyId) {
+  const config = DIFFICULTIES.find(item => item[0] === difficultyId) || DIFFICULTIES[2];
+  const baseSolution = [...BASE_PUZZLE];
+  solveBoard(baseSolution);
+  const basePuzzle = [...BASE_PUZZLE];
+  let holes = basePuzzle.filter(value => !value).length;
+  for (const index of shuffle([...Array(81).keys()])) {
+    if (holes <= config[2]) break;
+    if (!basePuzzle[index]) {
+      basePuzzle[index] = baseSolution[index];
+      holes -= 1;
+    }
+  }
+  const [puzzle, solution] = transformedPair(basePuzzle, baseSolution);
+  const hints = difficultyId === "extreme" ? 0 : 1 + Math.floor(Math.random() * 4);
+  return {
+    solution, puzzle, values: [...puzzle], given: puzzle.map(Boolean),
+    notes: Array.from({ length: 81 }, () => []), selected: -1, mistakes: 0,
+    seconds: 0, paused: false, notesMode: false, history: [], difficulty: difficultyId,
+    finished: false, hints, hintsUsed: 0, selectedHintUsed: false, startedAt: Date.now()
+  };
+}
+
+function normalizeGame(value) {
+  if (!value || !Array.isArray(value.solution) || value.solution.length !== 81 ||
+      !Array.isArray(value.values) || value.values.length !== 81 || value.finished) return null;
+  const difficultyId = DIFFICULTIES.some(item => item[0] === value.difficulty) ? value.difficulty : "medium";
+  const puzzle = Array.isArray(value.puzzle) && value.puzzle.length === 81 ? value.puzzle : value.values;
+  return {
+    ...value,
+    puzzle: [...puzzle],
+    given: Array.isArray(value.given) && value.given.length === 81 ? value.given.map(Boolean) : puzzle.map(Boolean),
+    notes: Array.from({ length: 81 }, (_, i) => Array.isArray(value.notes?.[i]) ? value.notes[i].filter(n => n >= 1 && n <= 9) : []),
+    selected: Number.isInteger(value.selected) && value.selected >= -1 && value.selected < 81 ? value.selected : -1,
+    mistakes: Math.max(0, Math.min(3, Number(value.mistakes) || 0)),
+    seconds: Math.max(0, Number(value.seconds) || 0),
+    paused: Boolean(value.paused),
+    notesMode: Boolean(value.notesMode),
+    history: Array.isArray(value.history) ? value.history.slice(-100) : [],
+    difficulty: difficultyId,
+    hints: difficultyId === "extreme" ? 0 : Math.max(0, Number(value.hints) || 0),
+    hintsUsed: Math.max(0, Number(value.hintsUsed) || 0),
+    selectedHintUsed: Boolean(value.selectedHintUsed),
+    finished: false
+  };
+}
+
+function savedGame() {
+  return normalizeGame(loadJSON(GAME_KEY, null));
+}
+
+function saveGame() {
+  if (state && !state.finished) localStorage.setItem(GAME_KEY, JSON.stringify(state));
+}
+
+function show(screenId) {
+  ["homeScreen", "gameScreen", "statsScreen", "resultScreen"].forEach(id => {
+    const element = $(`#${id}`);
+    const hidden = id !== screenId;
+    element.classList.toggle("hidden", hidden);
+    element.hidden = hidden;
+  });
+  currentScreen = screenId;
+  $("#themePanel").classList.add("hidden");
+  $("#themeToggle").setAttribute("aria-expanded", "false");
+  if (screenId === "homeScreen") renderHome();
+  if (screenId === "statsScreen") renderStats();
+  window.scrollTo(0, 0);
+}
+
+function renderHome() {
+  const level = levelInfo();
+  $("#homeLevel").textContent = level.level;
+  $("#homeXpText").textContent = `${profile.xp.toLocaleString()} XP · 다음 레벨까지 ${(level.needed - level.current).toLocaleString()} XP`;
+  $("#homeXpBar").style.width = `${level.current / level.needed * 100}%`;
+  $("#homeXpBar").parentElement.setAttribute("aria-valuenow", String(level.current));
+  $("#homeXpBar").parentElement.setAttribute("aria-valuemax", String(level.needed));
+  $("#homeStreak").textContent = profile.streak;
+  $("#continueGame").classList.toggle("hidden", !savedGame());
+  document.querySelectorAll(".difficulty").forEach(button => button.classList.toggle("active", button.dataset.difficulty === selectedDifficulty));
+}
+
+function startNew(force = false) {
+  if (savedGame() && !force) {
+    confirmModal(
+      "새 게임을 시작할까요?",
+      "현재 진행 중인 게임을 삭제하고 새 게임을 시작합니다.",
+      "새 게임 시작",
+      () => startNew(true)
+    );
+    return;
+  }
+  state = createGame(selectedDifficulty);
+  localStorage.removeItem(GAME_KEY);
+  saveGame();
+  show("gameScreen");
+  renderGame();
+}
+
+function continueGame() {
+  state = savedGame();
+  if (!state) {
+    renderHome();
+    return;
+  }
+  state.paused = false;
+  show("gameScreen");
+  renderGame();
+}
+
+function createNotes(numbers) {
+  const grid = document.createElement("span");
+  grid.className = "notes-grid";
+  for (let number = 1; number <= 9; number += 1) {
+    const item = document.createElement("span");
+    item.textContent = numbers.includes(number) ? number : "";
+    grid.appendChild(item);
+  }
+  return grid;
+}
+
+function renderGame() {
+  if (!state) return;
+  const board = $("#board");
+  board.innerHTML = "";
+  const selectedRow = state.selected >= 0 ? Math.floor(state.selected / 9) : -1;
+  const selectedColumn = state.selected >= 0 ? state.selected % 9 : -1;
+  const selectedValue = state.selected >= 0 ? state.values[state.selected] : 0;
+
+  state.values.forEach((value, index) => {
+    const cell = document.createElement("button");
+    const row = Math.floor(index / 9);
+    const column = index % 9;
+    cell.type = "button";
+    cell.className = "cell";
+    cell.setAttribute("role", "gridcell");
+    cell.setAttribute("aria-label", `${row + 1}행 ${column + 1}열${value ? `, ${value}` : ", 빈 칸"}`);
+    if (state.given[index]) cell.classList.add("given");
+    if (column === 2 || column === 5) cell.classList.add("box-right");
+    if (row === 2 || row === 5) cell.classList.add("box-bottom");
+    if (state.selected >= 0) {
+      const sameBox = Math.floor(row / 3) === Math.floor(selectedRow / 3) &&
+        Math.floor(column / 3) === Math.floor(selectedColumn / 3);
+      if (row === selectedRow || column === selectedColumn || sameBox) cell.classList.add("peer");
+      if (selectedValue && value === selectedValue) cell.classList.add("same");
+      if (index === state.selected) cell.classList.add("selected");
+    }
+    if (value && !state.given[index] && value !== state.solution[index]) cell.classList.add("bad");
+    if (value) cell.textContent = value;
+    else if (state.notes[index]?.length) cell.appendChild(createNotes(state.notes[index]));
+    cell.addEventListener("click", () => {
+      if (state.paused || state.finished) return;
+      state.selected = index;
+      renderGame();
+      saveGame();
+    });
+    board.appendChild(cell);
+  });
+
+  $("#difficultyLabel").textContent = difficulty()[1];
+  $("#mistakes").textContent = `${state.mistakes} / 3`;
+  $("#timer").textContent = formatTime(state.seconds);
+  $("#hintCount").textContent = state.difficulty === "extreme" ? "없음" : state.hints;
+  $("#pauseOverlay").classList.toggle("hidden", !state.paused);
+  $("#notes").classList.toggle("active", state.notesMode);
+  $("#hint").disabled = state.difficulty === "extreme" || state.hints <= 0;
+}
+
+function remember(index) {
+  state.history.push({ index, value: state.values[index], notes: [...(state.notes[index] || [])] });
+  if (state.history.length > 100) state.history.shift();
+}
+
+function removePeerNotes(index, number) {
+  const targetRow = Math.floor(index / 9);
+  const targetColumn = index % 9;
+  for (let i = 0; i < 81; i += 1) {
+    const row = Math.floor(i / 9);
+    const column = i % 9;
+    const sameBox = Math.floor(row / 3) === Math.floor(targetRow / 3) &&
+      Math.floor(column / 3) === Math.floor(targetColumn / 3);
+    if (row === targetRow || column === targetColumn || sameBox) {
+      state.notes[i] = (state.notes[i] || []).filter(value => value !== number);
+    }
+  }
+}
+
+function place(number) {
+  if (!state || state.paused || state.finished || state.selected < 0 || state.given[state.selected]) return;
+  const index = state.selected;
+  remember(index);
+  if (state.notesMode && number) {
+    state.values[index] = 0;
+    const notes = new Set(state.notes[index] || []);
+    if (notes.has(number)) notes.delete(number);
+    else notes.add(number);
+    state.notes[index] = [...notes].sort();
+    renderGame();
+    saveGame();
+    return;
+  }
+
+  state.notes[index] = [];
+  state.values[index] = number;
+  if (number && number !== state.solution[index]) {
+    state.mistakes += 1;
+    $("#message").textContent = "올바른 숫자가 아닙니다.";
+    if (state.mistakes >= 3) {
+      finish(false);
+      return;
+    }
+  } else {
+    $("#message").textContent = "";
+    if (number) removePeerNotes(index, number);
+  }
+  if (state.values.every((value, i) => value === state.solution[i])) {
+    finish(true);
+    return;
+  }
+  renderGame();
+  saveGame();
+}
+
+function undo() {
+  if (!state?.history.length || state.paused || state.finished) return;
+  const previous = state.history.pop();
+  state.values[previous.index] = previous.value;
+  state.notes[previous.index] = previous.notes;
+  state.selected = previous.index;
+  renderGame();
+  saveGame();
+}
+
+function useHint() {
+  if (!state || state.paused || state.finished || state.difficulty === "extreme" || state.hints <= 0) return;
+  const candidates = state.values
+    .map((value, index) => (!state.given[index] && value !== state.solution[index] ? index : -1))
+    .filter(index => index >= 0);
+  if (!candidates.length) return;
+
+  let index;
+  if (!state.selectedHintUsed && state.selected >= 0 && candidates.includes(state.selected)) {
+    index = state.selected;
+    state.selectedHintUsed = true;
+  } else {
+    index = candidates[Math.floor(Math.random() * candidates.length)];
+  }
+  state.hints -= 1;
+  state.hintsUsed += 1;
+  if (Math.random() < 0.01) {
+    $("#message").textContent = "힌트가 실패했습니다. 힌트 1개가 소모되었습니다.";
+    renderGame();
+    saveGame();
+    return;
+  }
+
+  remember(index);
+  state.selected = index;
+  state.values[index] = state.solution[index];
+  state.notes[index] = [];
+  removePeerNotes(index, state.solution[index]);
+  $("#message").textContent = "힌트로 한 칸을 공개했습니다.";
+  if (state.values.every((value, i) => value === state.solution[i])) {
+    finish(true);
+    return;
+  }
+  renderGame();
+  saveGame();
+}
+
+function calculateScore() {
+  const [, , , multiplier] = difficulty();
+  const base = 1000 * multiplier;
+  const timePenalty = Math.min(650, state.seconds * 0.55);
+  const mistakePenalty = state.mistakes * 130;
+  const hintPenalty = state.hintsUsed * 90;
+  return Math.max(100, Math.round(base - timePenalty - mistakePenalty - hintPenalty));
+}
+
+function finish(win) {
+  state.finished = true;
+  profile.played += 1;
+  const score = win ? calculateScore() : 0;
+  const xp = win ? Math.max(40, Math.round(score * 0.22)) : 10;
+  if (win) {
+    profile.wins += 1;
+    profile.totalScore += score;
+    profile.totalWinSeconds += state.seconds;
+    profile.maxSeconds = Math.max(profile.maxSeconds, state.seconds);
+    profile.maxScore = Math.max(profile.maxScore, score);
+    profile.maxDifficulty = Math.max(profile.maxDifficulty, DIFFICULTIES.findIndex(item => item[0] === state.difficulty));
+    if (state.mistakes === 0) profile.perfectWins += 1;
+    profile.streak += 1;
+    profile.bestStreak = Math.max(profile.bestStreak, profile.streak);
+  } else {
+    profile.streak = 0;
+  }
+  profile.xp += xp;
+  saveProfile();
+  localStorage.removeItem(GAME_KEY);
+  renderResult(win, score, xp);
+  show("resultScreen");
+}
+
+function renderResult(win, score, xp) {
+  $("#resultEyebrow").textContent = win ? "CLEAR" : "GAME OVER";
+  $("#resultTitle").textContent = win ? "완성했습니다!" : "게임이 종료되었습니다";
+  $("#resultSubtitle").textContent = win
+    ? `+${xp} XP를 획득했습니다.`
+    : "실수 3회로 실패했습니다. 플레이 기록과 XP가 반영되었습니다.";
+  const data = [
+    ["난이도", difficulty()[1]], ["점수", score.toLocaleString()],
+    ["완료 시간", formatTime(state.seconds)], ["실수", `${state.mistakes}회`],
+    ["힌트 사용", `${state.hintsUsed}회`], ["획득 XP", `+${xp}`]
+  ];
+  $("#resultGrid").innerHTML = data.map(([label, value]) =>
+    `<div class="result-item"><small>${label}</small><strong>${value}</strong></div>`).join("");
+}
+
+function renderStats() {
+  const level = levelInfo();
+  const averageScore = profile.wins ? Math.round(profile.totalScore / profile.wins) : 0;
+  const averageTime = profile.wins ? Math.round(profile.totalWinSeconds / profile.wins) : 0;
+  const maxDifficulty = profile.maxDifficulty >= 0 ? DIFFICULTIES[profile.maxDifficulty][1] : "없음";
+  $("#statsLevel").textContent = level.level;
+  $("#statsXp").textContent = profile.xp.toLocaleString();
+  $("#statsStreak").textContent = `${profile.streak} / ${profile.bestStreak}`;
+  const items = [
+    ["해본 횟수", profile.played], ["성공 횟수", profile.wins],
+    ["평균 점수", averageScore.toLocaleString()], ["평균 완료 시간", formatTime(averageTime)],
+    ["최대 시간", formatTime(profile.maxSeconds)], ["최대 점수", profile.maxScore.toLocaleString()],
+    ["성공한 최고 난이도", maxDifficulty], ["실수 없이 성공", profile.perfectWins],
+    ["현재 연승", profile.streak], ["최고 연승", profile.bestStreak],
+    ["레벨", level.level], ["누적 XP", profile.xp.toLocaleString()]
+  ];
+  $("#statsGrid").innerHTML = items.map(([label, value]) =>
+    `<div class="stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
+}
+
+function openModal(title, html, actions) {
+  $("#modalTitle").textContent = title;
+  $("#modalText").innerHTML = html;
+  $("#modalActions").innerHTML = "";
+  actions.forEach(([label, callback, className]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.className = className || "";
+    button.addEventListener("click", () => {
+      closeModal();
+      callback?.();
+    });
+    $("#modalActions").appendChild(button);
+  });
+  $("#modal").classList.remove("hidden");
+  $("#modalActions button:last-child")?.focus();
+}
+
+function closeModal() {
+  $("#modal").classList.add("hidden");
+}
+
+function confirmModal(title, text, confirmLabel, callback) {
+  openModal(title, `<p>${text}</p>`, [
+    ["취소", null, "secondary"],
+    [confirmLabel, callback, "primary"]
+  ]);
+}
+
+function showGuide() {
+  openModal("게임 설명", `<div class="guide">
+    <h3>기본 규칙</h3><p>각 행, 열, 3×3 영역에 1부터 9까지의 숫자가 한 번씩 들어가도록 빈칸을 채우세요.</p>
+    <h3>실수와 종료</h3><p>틀린 숫자를 입력하면 실수가 1회 증가하며, 3회가 되면 즉시 실패합니다.</p>
+    <h3>힌트</h3><p>극한을 제외한 게임에는 1~4개의 힌트가 주어집니다. 첫 힌트는 선택한 빈칸에, 이후에는 필요한 칸 중 하나에 사용됩니다. 각 힌트는 1% 확률로 실패하며 실패해도 소모됩니다.</p>
+    <h3>점수 · XP · 레벨</h3><p>난이도가 높을수록 기본 점수가 높습니다. 시간, 실수, 힌트 사용량이 최종 점수에 반영됩니다. 성공하면 점수에 따라 XP를 얻고 레벨이 올라갑니다.</p>
+    <h3>연승</h3><p>성공하면 연승이 증가하고 실패하면 현재 연승이 0으로 초기화됩니다.</p>
+  </div>`, [["확인", null, "primary"]]);
+}
+
+function applyTheme(index) {
+  const safeIndex = Number.isInteger(index) && THEMES[index] ? index : 0;
+  const theme = THEMES[safeIndex];
+  const root = document.documentElement.style;
+  root.setProperty("--accent", theme[1]);
+  root.setProperty("--soft", theme[2]);
+  root.setProperty("--strong", theme[3]);
+  $("#themeMeta").content = theme[1];
+  $("#themeSwatch").style.background = theme[1];
+  localStorage.setItem(THEME_KEY, String(safeIndex));
+  document.querySelectorAll(".theme-chip").forEach((element, i) => element.classList.toggle("active", i === safeIndex));
+}
+
+DIFFICULTIES.forEach(item => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "difficulty";
+  button.dataset.difficulty = item[0];
+  button.textContent = item[1];
+  button.addEventListener("click", () => {
+    selectedDifficulty = item[0];
+    renderHome();
+  });
+  $("#difficultyGrid").appendChild(button);
+});
+
+THEMES.forEach((theme, index) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "theme-chip";
+  button.title = theme[0];
+  button.setAttribute("aria-label", `${theme[0]} 테마`);
+  button.style.background = theme[1];
+  button.addEventListener("click", () => applyTheme(index));
+  $("#themePanel").appendChild(button);
+});
+
+for (let number = 1; number <= 9; number += 1) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = number;
+  button.addEventListener("click", () => place(number));
+  $("#numberPad").appendChild(button);
+}
+
+$("#themeToggle").addEventListener("click", () => {
+  const panel = $("#themePanel");
+  panel.classList.toggle("hidden");
+  $("#themeToggle").setAttribute("aria-expanded", String(!panel.classList.contains("hidden")));
+});
+$("#homeButton").addEventListener("click", () => show("homeScreen"));
+$("#backHome").addEventListener("click", () => {
+  if (state && !state.finished) saveGame();
+  show("homeScreen");
+});
+$("#statsBack").addEventListener("click", () => show("homeScreen"));
+$("#startGame").addEventListener("click", () => startNew());
+$("#continueGame").addEventListener("click", continueGame);
+$("#openStats").addEventListener("click", () => show("statsScreen"));
+$("#openHelp").addEventListener("click", showGuide);
+$("#undo").addEventListener("click", undo);
+$("#erase").addEventListener("click", () => place(0));
+$("#notes").addEventListener("click", () => {
+  if (!state) return;
+  state.notesMode = !state.notesMode;
+  renderGame();
+  saveGame();
+});
+$("#pause").addEventListener("click", () => {
+  if (!state || state.finished) return;
+  state.paused = true;
+  renderGame();
+  saveGame();
+});
+$("#resumeGame").addEventListener("click", () => {
+  state.paused = false;
+  renderGame();
+  saveGame();
+});
+$("#hint").addEventListener("click", useHint);
+$("#resultHome").addEventListener("click", () => show("homeScreen"));
+$("#resultAgain").addEventListener("click", () => {
+  selectedDifficulty = state.difficulty;
+  startNew(true);
+});
+$("#resetStats").addEventListener("click", () => confirmModal(
+  "통계를 초기화할까요?",
+  "누적 통계, XP, 레벨, 연승 기록을 모두 삭제합니다.",
+  "초기화",
+  () => {
+    profile = emptyProfile();
+    saveProfile();
+    renderStats();
+  }
+));
+$("#modal").addEventListener("click", event => {
+  if (event.target === $("#modal")) closeModal();
+});
+document.addEventListener("keydown", event => {
+  if (!$("#modal").classList.contains("hidden") && event.key === "Escape") closeModal();
+  if (currentScreen !== "gameScreen" || !state || state.paused) return;
+  if (/^[1-9]$/.test(event.key)) place(Number(event.key));
+  if (event.key === "Backspace" || event.key === "Delete") place(0);
+});
+
+const storedTheme = Number(localStorage.getItem(THEME_KEY));
+applyTheme(Number.isInteger(storedTheme) ? storedTheme : 0);
+show("homeScreen");
+
+setInterval(() => {
+  if (currentScreen === "gameScreen" && state && !state.paused && !state.finished) {
+    state.seconds += 1;
+    $("#timer").textContent = formatTime(state.seconds);
+    if (state.seconds % 5 === 0) saveGame();
+  }
+}, 1000);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
