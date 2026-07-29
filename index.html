@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="스도쿠">
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
   <title>스도쿠</title>
 </head>
 <body>
@@ -45,7 +45,8 @@
       <div class="xpbar" role="progressbar" aria-label="레벨 진행도"><span id="homeXpBar"></span></div>
     </div>
     <div class="card">
-      <label class="field"><span>필수 닉네임</span><input id="playerNickname" type="text" minlength="2" maxlength="16" autocomplete="nickname" placeholder="2~16자"></label>
+      <label class="field"><span>닉네임 (선택)</span><input id="playerNickname" type="text" minlength="2" maxlength="16" autocomplete="nickname" placeholder="랭킹 등록 시 2~16자"></label>
+      <small class="muted">비워두면 싱글게임 기록이 온라인 랭킹에 등록되지 않습니다.</small>
       <h2>난이도 선택</h2>
       <div id="difficultyGrid" class="difficulty-grid"></div>
       <button id="continueGame" class="primary wide hidden" type="button">이어하기</button>
@@ -172,6 +173,6 @@
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-card"><h2 id="modalTitle"></h2><div id="modalText"></div><div id="modalActions" class="modal-actions"></div></div>
 </div>
-<script src="app.js?v=18"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>
