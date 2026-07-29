@@ -2,6 +2,30 @@
 -- The public RPCs remain SECURITY DEFINER intentionally: clients are anonymous and
 -- authenticate room actions with per-player session tokens. Base tables stay closed by RLS.
 
+ALTER TABLE public.sudoku_room_players
+  ADD COLUMN IF NOT EXISTS left_at timestamptz;
+
+CREATE OR REPLACE FUNCTION private.sudoku_valid_token(
+  p_room_code text,
+  p_player_id uuid,
+  p_token text
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO ''
+AS $function$
+  select exists (
+    select 1
+    from public.sudoku_room_players p
+    where p.room_code = upper(trim(p_room_code))
+      and p.player_id = p_player_id
+      and p.left_at is null
+      and p.token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
+  );
+$function$;
+
 CREATE OR REPLACE FUNCTION private.sudoku_validate_room_puzzle()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -262,9 +286,21 @@ begin
     raise exception '방 또는 참가자를 찾을 수 없습니다.';
   end if;
 
-  if v_room_status = 'playing' and v_player_finished_at is not null then
-    delete from public.sudoku_room_players
+  if v_player_finished_at is not null then
+    update public.sudoku_room_players
+    set left_at = now()
     where room_code = v_code and player_id = p_player_id;
+
+    if v_room_status = 'finished'
+       and not exists (
+         select 1
+         from public.sudoku_room_players
+         where room_code = v_code and left_at is null
+       ) then
+      delete from public.sudoku_rooms
+      where room_code = v_code;
+    end if;
+
     return jsonb_build_object('status', 'left');
   end if;
 
@@ -457,4 +493,3 @@ revoke execute on function private.sudoku_validate_room_puzzle() from public;
 
 revoke all on function public.sudoku_leave_room_v1(text, uuid, text) from public, authenticated;
 grant execute on function public.sudoku_leave_room_v1(text, uuid, text) to anon, service_role;
-
