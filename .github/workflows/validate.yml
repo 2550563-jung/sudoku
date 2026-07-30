@@ -19,6 +19,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check app.js
+          node --check room-qr.js
           node --check sw.js
 
       - name: Validate manifest
@@ -31,6 +32,10 @@ jobs:
           test -n "$cache_version"
           grep -Fq "style.css?v=$cache_version" index.html
           grep -Fq "app.js?v=$cache_version" index.html
+          grep -Fq "room-qr.js?v=$cache_version" index.html
           grep -Fq "style.css?v=$cache_version" sw.js
           grep -Fq "app.js?v=$cache_version" sw.js
+          grep -Fq "room-qr.js?v=$cache_version" sw.js
+          grep -Fq "qrcode-generator-1.4.4.min.js?v=$cache_version" sw.js
+          grep -Fq "jsqr-1.4.0.js?v=$cache_version" sw.js
           grep -Fq "sudoku-v$cache_version" README.md

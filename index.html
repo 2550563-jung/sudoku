@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="스도쿠">
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <title>스도쿠</title>
 </head>
 <body>
@@ -47,6 +47,7 @@
     <div class="card">
       <label class="field"><span>닉네임 (선택)</span><input id="playerNickname" type="text" minlength="2" maxlength="16" autocomplete="nickname" placeholder="랭킹 등록 시 2~16자"></label>
       <small class="muted">비워두면 싱글게임 기록이 온라인 랭킹에 등록되지 않습니다.</small>
+      <label class="rank-option"><input id="singleRankOptIn" type="checkbox"><span><strong>이번 판 랭킹 등록</strong><small>선택할 때만 닉네임과 점수를 공개 랭킹에 등록합니다.</small></span></label>
       <h2>난이도 선택</h2>
       <div id="difficultyGrid" class="difficulty-grid"></div>
       <button id="continueGame" class="primary wide hidden" type="button">이어하기</button>
@@ -118,6 +119,7 @@
     <div class="screen-title"><button id="multiplayerBack" type="button">‹ 메인</button><h2>멀티플레이</h2></div>
     <div class="card">
       <label class="field"><span>닉네임</span><input id="onlineNickname" type="text" minlength="2" maxlength="16" autocomplete="nickname" placeholder="2~16자"></label>
+      <label class="rank-option"><input id="onlineRankOptIn" type="checkbox"><span><strong>이번 판 랭킹 등록</strong><small>선택하지 않으면 경기 결과가 공개 랭킹에서 제외됩니다.</small></span></label>
       <h3>새 방 만들기</h3>
       <div class="competition-note"><strong>2인 경쟁</strong><small>두 사람이 같은 퍼즐을 풀고, 먼저 완성한 사람이 승리합니다.</small></div>
       <button id="createRoom" class="primary wide" type="button">선택한 난이도로 방 만들기</button>
@@ -128,6 +130,7 @@
         <input id="roomCodeInput" class="room-code-input" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="8자리 코드">
         <button id="joinRoom" class="secondary" type="button">참가</button>
       </div>
+      <button id="scanRoomQr" class="secondary wide qr-scan-button" type="button">카메라로 QR 코드 스캔</button>
     </div>
     <p id="onlineMessage" class="message" aria-live="polite"></p>
   </section>
@@ -138,6 +141,8 @@
       <small>ROOM CODE</small>
       <strong id="lobbyRoomCode">--------</strong>
       <button id="copyRoomCode" class="secondary" type="button">코드 복사</button>
+      <div id="lobbyQrCode" class="room-qr" aria-live="polite"></div>
+      <button id="shareRoomQr" class="secondary" type="button">QR · 참가 링크 공유</button>
     </div>
     <div class="card">
       <div class="lobby-meta"><span><small>모드</small><strong id="lobbyMode"></strong></span><span><small>난이도</small><strong id="lobbyDifficulty"></strong></span></div>
@@ -173,6 +178,16 @@
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-card"><h2 id="modalTitle"></h2><div id="modalText"></div><div id="modalActions" class="modal-actions"></div></div>
 </div>
-<script src="app.js?v=19"></script>
+<div id="qrScanner" class="qr-scanner hidden" hidden role="dialog" aria-modal="true" aria-labelledby="qrScannerTitle">
+  <div class="qr-scanner-card">
+    <div class="qr-scanner-head"><h2 id="qrScannerTitle">QR 코드 스캔</h2><button id="closeQrScanner" type="button" aria-label="닫기">닫기</button></div>
+    <div class="qr-video-wrap"><video id="qrVideo" playsinline muted></video><span aria-hidden="true"></span></div>
+    <p id="qrScannerStatus" class="message" aria-live="polite">카메라를 준비하는 중입니다.</p>
+  </div>
+</div>
+<script src="vendor/qrcode-generator-1.4.4.min.js?v=20"></script>
+<script src="vendor/jsqr-1.4.0.js?v=20"></script>
+<script src="app.js?v=20"></script>
+<script src="room-qr.js?v=20"></script>
 </body>
 </html>
