@@ -1,0 +1,41 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check app.js
+          node --check room-qr.js
+          node --check sw.js
+
+      - name: Validate manifest
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
+
+      - name: Verify cache versions match
+        shell: bash
+        run: |
+          cache_version="$(sed -n 's/^const CACHE = "sudoku-v\([0-9][0-9]*\)";$/\1/p' sw.js)"
+          test -n "$cache_version"
+          grep -Fq "style.css?v=$cache_version" index.html
+          grep -Fq "app.js?v=$cache_version" index.html
+          grep -Fq "room-qr.js?v=$cache_version" index.html
+          grep -Fq "style.css?v=$cache_version" sw.js
+          grep -Fq "app.js?v=$cache_version" sw.js
+          grep -Fq "room-qr.js?v=$cache_version" sw.js
+          grep -Fq "qrcode-generator-1.4.4.min.js?v=$cache_version" sw.js
+          grep -Fq "jsqr-1.4.0.js?v=$cache_version" sw.js
+          grep -Fq "sudoku-v$cache_version" README.md
