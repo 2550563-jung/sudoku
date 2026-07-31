@@ -134,6 +134,8 @@ h2 { margin: 4px 0 10px; }
 .tools small { display: block; font-size: 10px; }
 .tools button.active { background: var(--accent); color: #fff; }
 .number-pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; }
+.number-pad.syncing { opacity: .58; cursor: wait; }
+.number-pad.syncing button { cursor: wait; }
 .number-pad button {
   border: 0; aspect-ratio: 1; min-width: 0; border-radius: 12px;
   background: var(--soft); color: var(--strong); font-size: clamp(18px, 5vw, 24px); font-weight: 900;
