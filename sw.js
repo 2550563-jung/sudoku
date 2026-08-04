@@ -1,7 +1,7 @@
-const CACHE = "sudoku-v22";
+const CACHE = "sudoku-v23";
 const ASSETS = [
-  "./", "./index.html", "./style.css?v=22", "./sudoku-core.js?v=22", "./app.js?v=22", "./room-qr.js?v=22", "./manifest.json",
-  "./vendor/qrcode-generator-1.4.4.min.js?v=22", "./vendor/jsqr-1.4.0.js?v=22",
+  "./", "./index.html", "./style.css?v=23", "./sudoku-core.js?v=23", "./app.js?v=23", "./sudoku-extreme-v23.js?v=23", "./room-qr.js?v=23", "./manifest.json",
+  "./vendor/qrcode-generator-1.4.4.min.js?v=23", "./vendor/jsqr-1.4.0.js?v=23",
   "./favicon.ico", "./favicon-16.png", "./favicon-32.png", "./apple-touch-icon.png",
   "./icon-48.png", "./icon-48.png?v=12", "./icon-72.png", "./icon-96.png", "./icon-192.png", "./icon-512.png",
   "./icon-maskable-192.png", "./icon-maskable-512.png"
