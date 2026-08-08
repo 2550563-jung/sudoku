@@ -15,9 +15,17 @@
     });
   }
 
-  window.addEventListener("pagehide", () => {
+  function recordCurrentScreen() {
     const gameScreen = document.querySelector("#gameScreen");
     const isPlaying = Boolean(gameScreen && !gameScreen.hidden && !gameScreen.classList.contains("hidden"));
     sessionStorage.setItem(SCREEN_KEY, isPlaying ? "game" : "other");
-  }, { capture: true });
+  }
+
+  const gameScreen = document.querySelector("#gameScreen");
+  if (gameScreen && typeof MutationObserver !== "undefined") {
+    new MutationObserver(recordCurrentScreen).observe(gameScreen, { attributes: true, attributeFilter: ["class", "hidden"] });
+  }
+  queueMicrotask(recordCurrentScreen);
+  window.addEventListener("beforeunload", recordCurrentScreen, { capture: true });
+  window.addEventListener("pagehide", recordCurrentScreen, { capture: true });
 })();
