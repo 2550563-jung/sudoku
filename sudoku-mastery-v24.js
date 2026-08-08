@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = 25;
+  const VERSION = 26;
   const LOCK_RESET_GENERATION = 2;
   const PROFILE_KEY = "sudoku-profile-v5";
   const PROGRESSION_KEY = "sudoku-progression-v2";
@@ -9,10 +9,10 @@
   const THEME_KEY = "sudoku-theme-v6";
   const NICKNAME_KEY = "sudoku-player-nickname-v1";
   const DIFFICULTIES = [
-    ["veryEasy", "매우 쉬움", 12 * 60], ["easy", "쉬움", 15 * 60],
-    ["medium", "보통", 18 * 60], ["hard", "어려움", 22 * 60],
-    ["expert", "전문가", 28 * 60], ["master", "마스터", 35 * 60],
-    ["extreme", "극한", 30 * 60]
+    ["veryEasy", "매우 쉬움", 3 * 60], ["easy", "쉬움", 4 * 60],
+    ["medium", "보통", 5 * 60], ["hard", "어려움", 6 * 60],
+    ["expert", "전문가", 7 * 60], ["master", "마스터", 8 * 60],
+    ["extreme", "극한", 9 * 60]
   ];
   const THEMES = [
     ["코발트", "#1769ff", "#dbeafe", "#0b4ed1"], ["하늘", "#00a8f3", "#dff6ff", "#0079b7"],
@@ -202,7 +202,8 @@
     $("#testClose").onclick = () => { clearInterval(timer); overlay.remove(); }; render();
   }
 
-  function certificateName() { return localStorage.getItem(NICKNAME_KEY)?.trim() || accountUser?.email?.split("@")[0] || "스도쿠 플레이어"; }
+  function accountName() { return accountUser?.user_metadata?.username || accountUser?.email?.split("@")[0] || ""; }
+  function certificateName() { return localStorage.getItem(NICKNAME_KEY)?.trim() || accountName() || "스도쿠 플레이어"; }
   function drawCertificate(canvas, signature) {
     canvas.width = 1200; canvas.height = 850; const ctx = canvas.getContext("2d");
     const gradient = ctx.createLinearGradient(0, 0, 1200, 850); gradient.addColorStop(0, "#fffdf5"); gradient.addColorStop(1, "#fff4c7"); ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1200, 850);
@@ -232,21 +233,28 @@
   function ensureAccountCard() {
     if ($("#sudokuAccountCard")) return;
     const card = document.createElement("section"); card.id = "sudokuAccountCard"; card.className = "card mastery-card sudoku-account-card";
-    card.innerHTML = '<div class="account-card-heading"><span class="account-avatar" aria-hidden="true">👤</span><div><small>ACCOUNT</small><h3>계정 저장</h3></div><span id="accountStateBadge" class="account-state-badge">로그아웃</span></div><p>닉네임과 이 기기의 기록은 계정 없이도 유지됩니다. 로그인하면 기록을 다른 기기와 동기화할 수 있습니다.</p><label class="field"><span>이메일</span><input id="accountEmail" type="email" autocomplete="email" placeholder="name@example.com"></label><label class="field"><span>비밀번호</span><input id="accountPassword" type="password" minlength="6" autocomplete="current-password" placeholder="6자 이상"></label><div class="account-actions"><button id="accountLogin" class="primary" type="button">로그인</button><button id="accountSignup" class="secondary" type="button">새 계정 만들기</button><button id="accountLogout" class="secondary wide hidden" type="button">로그아웃</button></div><p id="accountStatus" class="account-status" aria-live="polite">로그인하지 않음 · 이 기기에 저장 중</p>';
+    card.innerHTML = '<div class="account-card-heading"><span class="account-avatar" aria-hidden="true">👤</span><div><small>ACCOUNT</small><h3>계정 저장</h3></div><span id="accountStateBadge" class="account-state-badge">로그아웃</span></div><p>이메일 인증 없이 아이디와 비밀번호만으로 로그인합니다. 이 기기의 닉네임과 기록은 계정 없이도 유지됩니다.</p><label class="field"><span>아이디</span><input id="accountUsername" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="20" placeholder="영문·숫자·_ 4~20자"></label><label class="field"><span>비밀번호</span><input id="accountPassword" type="password" minlength="6" autocomplete="current-password" placeholder="6자 이상"></label><div class="account-actions"><button id="accountLogin" class="primary" type="button">로그인</button><button id="accountSignup" class="secondary" type="button">새 계정 만들기</button><button id="accountLogout" class="secondary wide hidden" type="button">로그아웃</button></div><p id="accountStatus" class="account-status" aria-live="polite">로그인하지 않음 · 이 기기에 저장 중</p>';
     const homeHero = $("#homeScreen .hero");
     if (homeHero) homeHero.insertAdjacentElement("afterend", card); else $("#homeScreen")?.prepend(card);
     $("#accountLogin").onclick = () => accountAction("login"); $("#accountSignup").onclick = () => accountAction("signup"); $("#accountLogout").onclick = accountLogout;
-    $("#accountIndicator")?.addEventListener("click", () => { card.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => $("#accountEmail")?.focus(), 350); });
+    $("#accountIndicator")?.addEventListener("click", () => { card.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => $("#accountUsername")?.focus(), 350); });
   }
 
   function accountStatus(message, error) { const node = $("#accountStatus"); if (node) { node.textContent = message; node.style.color = error ? "var(--danger)" : ""; } }
+  function usernameEmail(username) { return `${username.trim().toLowerCase()}@id.sudoku.local`; }
   async function accountAction(type) {
-    const email = $("#accountEmail").value.trim(), password = $("#accountPassword").value;
-    if (!email || password.length < 6) return accountStatus("이메일과 6자 이상의 비밀번호를 입력해 주세요.", true);
+    const username = $("#accountUsername").value.trim(), password = $("#accountPassword").value;
+    const legacyEmail = username.includes("@");
+    if ((!legacyEmail && !/^[A-Za-z0-9_]{4,20}$/.test(username)) || password.length < 6) return accountStatus("아이디는 영문·숫자·_ 4~20자, 비밀번호는 6자 이상이어야 합니다.", true);
     accountStatus("처리 중…");
-    const response = type === "signup" ? await accountClient.auth.signUp({ email, password }) : await accountClient.auth.signInWithPassword({ email, password });
+    if (type === "signup" && legacyEmail) return accountStatus("새 계정은 이메일이 아닌 아이디를 입력해 주세요.", true);
+    const email = legacyEmail ? username : usernameEmail(username);
+    const response = type === "signup"
+      ? await accountClient.auth.signUp({ email, password, options: { data: { username } } })
+      : await accountClient.auth.signInWithPassword({ email, password });
     if (response.error) return accountStatus(response.error.message, true);
-    if (type === "signup" && !response.data.session) accountStatus("가입 확인 메일을 확인해 주세요."); else accountStatus("로그인되었습니다.");
+    if (type === "signup" && !response.data.session) return accountStatus("계정 인증 설정을 적용하는 중입니다. 잠시 후 다시 시도해 주세요.", true);
+    accountStatus(type === "signup" ? "계정이 만들어졌고 바로 로그인되었습니다." : "로그인되었습니다.");
   }
   async function accountLogout() { await accountClient.auth.signOut(); accountStatus("로그아웃했습니다."); }
 
@@ -271,7 +279,7 @@
       write(PROFILE_KEY, mergeNumbers(read(PROFILE_KEY, {}), data.profile));
       const remoteProgression = data.progression || {};
       const remoteUsesCurrentLocks = remoteProgression.resetGeneration === LOCK_RESET_GENERATION
-        && Number(remoteProgression.version) >= VERSION;
+        && Number(remoteProgression.version) >= 25;
       if (remoteUsesCurrentLocks) {
         Object.assign(progression, mergeNumbers(progression, remoteProgression), {
           extremeTestUnlocked: Boolean(progression.extremeTestUnlocked || remoteProgression.extremeTestUnlocked),
@@ -290,15 +298,15 @@
     if (!accountUser) return;
     const payload = { user_id: accountUser.id, profile: read(PROFILE_KEY, {}), progression, difficulty_stats: difficultyStats, updated_at: new Date().toISOString() };
     const { error } = await accountClient.from("sudoku_account_profiles").upsert(payload, { onConflict: "user_id" });
-    accountStatus(error ? "동기화에 실패했습니다. 이 기기의 기록은 안전하게 유지됩니다." : `${accountUser.email} · 동기화됨`, Boolean(error));
+    accountStatus(error ? "동기화에 실패했습니다. 이 기기의 기록은 안전하게 유지됩니다." : `${accountName()} · 동기화됨`, Boolean(error));
   }
   function queueAccountSync() { clearTimeout(syncTimer); syncTimer = setTimeout(syncAccountData, 1200); }
   function renderAccount() {
     const loggedIn = Boolean(accountUser); $("#accountLogin")?.classList.toggle("hidden", loggedIn); $("#accountSignup")?.classList.toggle("hidden", loggedIn); $("#accountLogout")?.classList.toggle("hidden", !loggedIn);
     const indicator = $("#accountIndicatorText"), badge = $("#accountStateBadge");
-    if (indicator) indicator.textContent = loggedIn ? (accountUser.email?.split("@")[0] || "로그인됨") : "계정 로그인";
+    if (indicator) indicator.textContent = loggedIn ? (accountName() || "로그인됨") : "계정 로그인";
     if (badge) { badge.textContent = loggedIn ? "로그인됨" : "로그아웃"; badge.classList.toggle("online", loggedIn); }
-    if (loggedIn) { $("#accountEmail").value = accountUser.email || ""; $("#accountEmail").disabled = true; $("#accountPassword").parentElement.classList.add("hidden"); } else { $("#accountEmail").disabled = false; $("#accountPassword").parentElement.classList.remove("hidden"); accountStatus("로그인하지 않았습니다."); }
+    if (loggedIn) { $("#accountUsername").value = accountName(); $("#accountUsername").disabled = true; $("#accountPassword").parentElement.classList.add("hidden"); } else { $("#accountUsername").disabled = false; $("#accountPassword").parentElement.classList.remove("hidden"); accountStatus("로그인하지 않았습니다."); }
   }
 
   function initAccount() {
@@ -323,6 +331,7 @@
     const observer = new MutationObserver(() => processResult()); observer.observe($("#resultScreen"), { attributes: true, attributeFilter: ["class", "hidden"] });
     renderThemes(); renderLocks(); initAccount(); processResult();
     const publicApi = { VERSION, progression, difficultyStats, renderThemes, renderLocks };
+    window.SudokuMasteryV26 = publicApi;
     window.SudokuMasteryV25 = publicApi;
     window.SudokuMasteryV24 = publicApi;
   }
