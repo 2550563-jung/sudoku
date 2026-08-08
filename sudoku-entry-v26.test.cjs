@@ -14,8 +14,9 @@ async function run(type, previousScreen) {
     performance: { getEntriesByType: () => [{ type }] },
     localStorage: storage(local), sessionStorage: storage(session), queueMicrotask,
     window: { addEventListener: (name, handler) => { listeners[name] = handler; } },
-    document: { querySelector: (selector) => selector === "#continueGame" ? { classList: { remove: () => { continueVisible = true; } } } : null }
+    setTimeout, document: { readyState: "loading", querySelector: (selector) => selector === "#continueGame" ? { classList: { remove: () => { continueVisible = true; } } } : null }
   });
+  listeners.load?.();
   await new Promise(queueMicrotask);
   return { gameAvailable: local.has("sudoku-game-v5"), continueVisible };
 }

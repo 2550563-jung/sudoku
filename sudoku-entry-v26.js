@@ -9,10 +9,12 @@
 
   if (savedGame !== null) {
     localStorage.removeItem(GAME_KEY);
-    queueMicrotask(() => {
+    const restoreSavedGame = () => {
       localStorage.setItem(GAME_KEY, savedGame);
       document.querySelector("#continueGame")?.classList.remove("hidden");
-    });
+    };
+    if (document.readyState === "complete") setTimeout(restoreSavedGame, 0);
+    else window.addEventListener("load", restoreSavedGame, { once: true });
   }
 
   function recordCurrentScreen() {
