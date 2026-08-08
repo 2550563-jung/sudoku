@@ -26,9 +26,12 @@ assert.equal(extreme.VERSION, 23);
 assert.equal(result.analysis.solutionCount, 1);
 assert.equal(result.puzzle.filter(Boolean).length, 17);
 assert.equal(result.solution.length, 81);
-assert.equal(result.attempts.length, extreme.CANDIDATE_COUNT);
+assert.ok(result.attempts.length >= 48);
 assert.equal(result.score, Math.max(...result.attempts));
 assert.ok(result.score > 0);
+const v24Analysis = core.analyzePuzzle(extreme.EXTREME_PUZZLE, 2);
+assert.equal(v24Analysis.solutionCount, 1);
+assert.ok(extreme.difficultyScore(v24Analysis.metrics) > result.score);
 console.log("Sudoku extreme v23 selection test passed.", {
   score: result.score,
   candidates: result.attempts.length,

@@ -13,7 +13,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="스도쿠">
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="sudoku-mastery-v24.css?v=25">
   <title>스도쿠</title>
 </head>
 <body>
@@ -24,6 +25,9 @@
       <span><strong>스도쿠</strong><small>집중력을 깨우는 숫자 퍼즐</small></span>
     </button>
     <div class="topbar-actions">
+      <button id="accountIndicator" class="account-indicator" type="button" aria-label="계정 영역으로 이동">
+        <span aria-hidden="true">👤</span><strong id="accountIndicatorText">계정 로그인</strong>
+      </button>
       <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true">효과음 켬</button>
       <button id="themeToggle" class="theme-toggle" type="button" aria-expanded="false"><span id="themeSwatch"></span>색상</button>
     </div>
@@ -189,7 +193,9 @@
 <script src="vendor/jsqr-1.4.0.js?v=23"></script>
 <script src="sudoku-core.js?v=23"></script>
 <script src="app.js?v=23"></script>
-<script src="sudoku-extreme-v23.js?v=23"></script>
+<script src="sudoku-extreme-v23.js?v=24"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+<script src="sudoku-mastery-v24.js?v=25"></script>
 <script src="room-qr.js?v=23"></script>
 </body>
 </html>
