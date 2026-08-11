@@ -35,4 +35,12 @@
 .certificate-preview { width:100%; border-radius:14px; background:#fff; border:1px solid #d6b45e; }
 .signature-pad { width:100%; height:140px; border:2px dashed #c59b35; border-radius:12px; background:#fffdf7; touch-action:none; }
 .certificate-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.admin-vault-button { margin-top:4px; border-color:#b98a27; color:#805b0b; background:linear-gradient(145deg,#fffaf0,#f7e4ad); }
+.vault-heading { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; text-align:center; color:#b98512; }
+.vault-heading small { letter-spacing:.18em; font-weight:900; color:#8b6a26; }
+.vault-heading h2 { margin:2px 0 0; }
+.vault-display { width:100%; box-sizing:border-box; margin:12px 0; padding:16px; text-align:center; letter-spacing:.55em; font-size:24px; font-weight:900; border:2px solid #b98512; border-radius:14px; background:#111827; color:#f8d66d; box-shadow:inset 0 0 24px #0009,0 0 0 4px #e8c66a33; }
+.vault-keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:12px; }
+.vault-keypad button { min-height:54px; border:1px solid #9d751c; border-radius:50%; background:radial-gradient(circle at 35% 25%,#fff5c5,#b98512 72%,#5f4007); color:#211500; font-size:19px; font-weight:900; box-shadow:inset 0 2px 5px #fff8,0 5px 12px #0003; }
+.admin-command-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 @media (max-width:520px){ .test-cell{width:30px;height:38px;font-size:16px}.mastery-dialog{padding:15px}.account-actions{grid-template-columns:1fr}.account-indicator{max-width:48px}.account-indicator strong{display:none} }

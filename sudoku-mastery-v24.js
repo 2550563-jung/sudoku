@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const VERSION = 26;
+  const VERSION = 27;
   const LOCK_RESET_GENERATION = 2;
   const PROFILE_KEY = "sudoku-profile-v5";
   const PROGRESSION_KEY = "sudoku-progression-v2";
@@ -9,9 +9,9 @@
   const THEME_KEY = "sudoku-theme-v6";
   const NICKNAME_KEY = "sudoku-player-nickname-v1";
   const DIFFICULTIES = [
-    ["veryEasy", "매우 쉬움", 3 * 60], ["easy", "쉬움", 4 * 60],
-    ["medium", "보통", 5 * 60], ["hard", "어려움", 6 * 60],
-    ["expert", "전문가", 7 * 60], ["master", "마스터", 8 * 60],
+    ["veryEasy", "매우 쉬움", 3 * 60], ["easy", "쉬움", 3 * 60 + 10],
+    ["medium", "보통", 4 * 60 + 20], ["hard", "어려움", 5 * 60 + 30],
+    ["expert", "전문가", 6 * 60 + 40], ["master", "마스터", 7 * 60 + 50],
     ["extreme", "극한", 9 * 60]
   ];
   const THEMES = [
@@ -42,6 +42,9 @@
   let accountClient = null;
   let accountUser = null;
   let syncTimer = 0;
+  let adminMode = false;
+  const ADMIN_AUTH_URL = "https://wxaufxqcanqsksntllsw.supabase.co/functions/v1/admin-auth";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_SMn528g1hfMZAEWHCmOVRA_NUbtUFzE";
 
   function saveProgression() { write(PROGRESSION_KEY, progression); }
   function unlockedThemeCount() { return 12 + Math.floor(Math.max(0, progression.unlockedIndex) * 9 / 6); }
@@ -318,6 +321,41 @@
     setInterval(queueAccountSync, 15000);
   }
 
+  function openAdminLogin() {
+    const overlay = makeOverlay("sudokuAdminLogin", '<div class="vault-heading"><span>◆</span><div><small>SECURE VAULT</small><h2>관리자 인증</h2></div><span>◆</span></div><p>서버에서 암호를 확인합니다. 입력값은 기기에 저장되지 않습니다.</p><input id="sudokuAdminCode" class="vault-display" type="password" inputmode="none" readonly maxlength="8" aria-label="관리자 암호"><div class="vault-keypad">'+[1,2,3,4,5,6,7,8,9].map((n)=>`<button type="button" data-vault-key="${n}">${n}</button>`).join("")+'<button type="button" data-vault-action="clear">C</button><button type="button" data-vault-key="0">0</button><button type="button" data-vault-action="back">⌫</button></div><button id="sudokuAdminVerify" class="primary wide" type="button" disabled>금고 열기</button><p id="sudokuAdminStatus" class="account-status" aria-live="polite"></p><button id="sudokuAdminClose" class="secondary wide" type="button">닫기</button>');
+    const input = $("#sudokuAdminCode"), verify = $("#sudokuAdminVerify"), status = $("#sudokuAdminStatus");
+    const refresh = () => { verify.disabled = input.value.length !== 8; };
+    overlay.querySelectorAll("[data-vault-key]").forEach((button) => button.onclick = () => { if (input.value.length < 8) input.value += button.dataset.vaultKey; refresh(); });
+    overlay.querySelector('[data-vault-action="clear"]').onclick = () => { input.value = ""; refresh(); };
+    overlay.querySelector('[data-vault-action="back"]').onclick = () => { input.value = input.value.slice(0, -1); refresh(); };
+    $("#sudokuAdminClose").onclick = () => overlay.remove();
+    verify.onclick = async () => {
+      verify.disabled = true; status.textContent = "보안 서버에서 확인 중…";
+      try {
+        const response = await fetch(ADMIN_AUTH_URL, { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPABASE_PUBLISHABLE_KEY }, body: JSON.stringify({ password: input.value }) });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) { status.textContent = response.status === 429 ? "시도 횟수가 많습니다. 잠시 후 다시 시도하세요." : "암호가 올바르지 않습니다."; input.value = ""; refresh(); return; }
+        adminMode = true; overlay.remove(); openAdminPanel();
+      } catch { status.textContent = "서버에 연결하지 못했습니다."; refresh(); }
+    };
+  }
+
+  function openAdminPanel() {
+    if (!adminMode) return openAdminLogin();
+    const overlay = makeOverlay("sudokuAdminPanel", '<div class="vault-heading"><span>◆</span><div><small>ADMIN MODE</small><h2>스도쿠 관리자 모드</h2></div><span>◆</span></div><p>관리자 조작은 기존 평균 시간 통계를 지우지 않습니다.</p><div class="admin-command-grid"><button id="adminUnlockAll" class="primary" type="button">난이도·색상 전체 해금</button><button id="adminUnlockMaster" class="primary" type="button">달인·자격증 해금</button><button id="adminRelock" class="secondary" type="button">잠금만 처음부터</button><button id="adminClose" class="secondary" type="button">관리자 종료</button></div><p id="adminCommandStatus" class="account-status"></p>');
+    const status = $("#adminCommandStatus");
+    $("#adminUnlockAll").onclick = () => { progression.unlockedIndex = DIFFICULTIES.length - 1; progression.extremeTestUnlocked = true; saveProgression(); renderLocks(); renderThemes(); queueAccountSync(); status.textContent = "극한과 테스트까지 해금했습니다."; };
+    $("#adminUnlockMaster").onclick = () => { progression.unlockedIndex = DIFFICULTIES.length - 1; progression.extremeTestUnlocked = true; progression.master = true; saveProgression(); renderLocks(); renderThemes(); queueAccountSync(); status.textContent = "스도쿠의 달인과 자격증을 해금했습니다."; };
+    $("#adminRelock").onclick = () => { Object.assign(progression, defaultProgression(), { lastResult: progression.lastResult }); saveProgression(); renderLocks(); renderThemes(); queueAccountSync(); status.textContent = "평균 시간은 보존하고 난이도 잠금만 초기화했습니다."; };
+    $("#adminClose").onclick = () => { adminMode = false; overlay.remove(); };
+  }
+
+  function ensureAdminButton() {
+    if ($("#sudokuAdminButton")) return;
+    const button = document.createElement("button"); button.id = "sudokuAdminButton"; button.className = "secondary wide admin-vault-button"; button.type = "button"; button.textContent = "◆ 관리자 금고"; button.onclick = openAdminLogin;
+    $("#sudokuAccountCard")?.appendChild(button);
+  }
+
   function init() {
     saveProgression();
     const first = document.querySelector('.difficulty[data-difficulty="veryEasy"]');
@@ -329,7 +367,7 @@
     }, true);
     $("#startGame")?.addEventListener("click", (event) => { const active = document.querySelector(".difficulty.active"), index = DIFFICULTIES.findIndex((item) => item[0] === active?.dataset.difficulty); if (index > progression.unlockedIndex) { event.preventDefault(); event.stopImmediatePropagation(); showNotice("잠긴 난이도", "앞 난이도를 먼저 해금해 주세요."); } }, true);
     const observer = new MutationObserver(() => processResult()); observer.observe($("#resultScreen"), { attributes: true, attributeFilter: ["class", "hidden"] });
-    renderThemes(); renderLocks(); initAccount(); processResult();
+    renderThemes(); renderLocks(); initAccount(); ensureAdminButton(); processResult();
     const publicApi = { VERSION, progression, difficultyStats, renderThemes, renderLocks };
     window.SudokuMasteryV26 = publicApi;
     window.SudokuMasteryV25 = publicApi;
