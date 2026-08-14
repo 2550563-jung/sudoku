@@ -3,10 +3,27 @@
 .difficulty.unlock-ready { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent); }
 .theme-chip.locked { opacity: .35; filter: grayscale(.75); position: relative; }
 .theme-chip.locked::after { content: "🔒"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; }
-.theme-chip.master-gold { position: relative; overflow: visible; background: conic-gradient(from 20deg,#fff3a6,#d89d16,#fff7bf,#a86b06,#fff3a6) !important; box-shadow: 0 0 0 1px #8a5b08, 0 0 18px #ffd95d; }
-.theme-chip.master-gold::before { content: "✦"; position: absolute; color: #fff8c7; text-shadow: 0 0 7px #fff,0 0 12px #ffb300; animation: mastery-sparkle 1.4s infinite ease-in-out; }
+.theme-chip.master-gold { position: relative; overflow: visible; background: conic-gradient(from 20deg,#fff,#ffe46a,#c37a00,#fff7b0,#8b4b00,#fff) !important; box-shadow:0 0 0 2px #7b4600,0 0 0 5px #ffe991,0 0 30px #ffba00,0 0 58px #fff08a; animation:master-gold-chip 1.8s linear infinite; }
+.theme-chip.master-gold::before { content: "✦"; position: absolute; color:#fff; font-size:18px; text-shadow:0 0 5px #fff,0 0 13px #ffe000,0 0 22px #ff8a00; animation:mastery-sparkle .9s infinite ease-in-out; }
+.theme-chip.master-gold::after { content:"MASTER"; position:absolute; left:50%; bottom:-19px; transform:translateX(-50%); color:#8a5400; font-size:8px; font-weight:1000; letter-spacing:.12em; }
 @keyframes mastery-sparkle { 0%,100% { transform: translate(-7px,-7px) scale(.65); opacity:.35 } 50% { transform: translate(16px,13px) scale(1.2); opacity:1 } }
+@keyframes master-gold-chip{to{filter:hue-rotate(12deg) brightness(1.18)}}
+.master-gold-active{--accent:#f6bb13;--soft:#fff3b0;--strong:#704000;background:radial-gradient(circle at 15% 8%,#fff7bd 0 3%,transparent 19%),radial-gradient(circle at 85% 16%,#ffe46c 0 2%,transparent 21%),linear-gradient(135deg,#fffdf1,#fff1a8 48%,#fff9d8)!important;}
+.master-gold-active::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(115deg,transparent 20%,#fff9 38%,transparent 52%);background-size:260% 100%;animation:master-gold-sweep 3.2s linear infinite;}
+.master-gold-active .topbar,.master-gold-active .card{border-color:#d99a0b!important;box-shadow:0 0 0 1px #fff5ae,0 12px 35px #b7791230,0 0 22px #ffd84b2b!important;}
+.master-gold-active .hero{background:linear-gradient(145deg,#fffef5,#fff0a4 55%,#f7c643)!important;position:relative;overflow:hidden;}
+.master-gold-active .hero::after{content:"✦  MASTER  ✦";position:absolute;right:13px;top:10px;color:#9a6200;font-size:10px;font-weight:1000;letter-spacing:.18em;text-shadow:0 1px #fff;}
+.master-gold-active button.primary{background:linear-gradient(120deg,#6f3d00,#d59000 35%,#fff082 50%,#c47a00 66%,#613400)!important;background-size:240% 100%!important;color:white!important;border:1px solid #fff0a6!important;box-shadow:0 7px 20px #a65c0055,0 0 18px #ffd84f!important;animation:master-gold-button 2.4s linear infinite;}
+.master-gold-active .board{border-color:#9b6000!important;box-shadow:0 0 0 3px #ffd857,0 0 28px #e5a40066!important;}
+.master-gold-active .cell.selected,.master-gold-active .cell.same{background:linear-gradient(135deg,#fff9ce,#ffd85b)!important;}
+.master-gold-celebration{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;}
+.master-gold-celebration i{position:absolute;left:var(--x);top:-8%;color:#ffd11a;font-style:normal;font-size:clamp(14px,3vw,30px);text-shadow:0 0 8px #fff,0 0 16px #ffb300;animation:master-gold-fall 2.3s var(--d) cubic-bezier(.2,.7,.4,1) both;}
+@keyframes master-gold-sweep{to{background-position:-260% 0}}
+@keyframes master-gold-button{to{background-position:-240% 0}}
+@keyframes master-gold-fall{0%{transform:translateY(-10vh) rotate(0) scale(.3);opacity:0}15%{opacity:1}100%{transform:translateY(112vh) rotate(680deg) scale(1.2);opacity:0}}
+@media(prefers-reduced-motion:reduce){.master-gold-active::before,.master-gold-active button.primary,.theme-chip.master-gold{animation:none}.master-gold-celebration{display:none}}
 .mastery-card { margin-top: 14px; display: grid; gap: 10px; }
+.app-download-card{text-decoration:none;color:inherit;display:grid;align-content:center;gap:3px;border-color:#50a857!important;background:linear-gradient(145deg,#f4fff4,#d9ffdf)!important}.app-download-card small{color:#23883b;font-weight:1000;letter-spacing:.08em}
 .mastery-card h3,.mastery-card p { margin: 0; }
 .mastery-progress { display: grid; gap: 7px; }
 .mastery-progress-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; background: #f8fafc; font-size: 13px; }

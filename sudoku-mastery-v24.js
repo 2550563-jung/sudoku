@@ -56,11 +56,23 @@
     document.documentElement.style.setProperty("--accent", theme[1]);
     document.documentElement.style.setProperty("--soft", theme[2]);
     document.documentElement.style.setProperty("--strong", theme[3]);
+    document.body.classList.toggle("master-gold-active", isGold);
     $("#themeMeta").content = theme[1];
     $("#themeSwatch").style.background = theme[1];
     selectedTheme = index;
     localStorage.setItem(THEME_KEY, String(index));
     document.querySelectorAll(".theme-chip").forEach((chip) => chip.classList.toggle("active", Number(chip.dataset.masteryTheme) === index));
+    if (isGold) celebrateMasterGold();
+  }
+
+  function celebrateMasterGold() {
+    if (document.querySelector(".master-gold-celebration")) return;
+    const layer = document.createElement("div");
+    layer.className = "master-gold-celebration";
+    layer.setAttribute("aria-hidden", "true");
+    layer.innerHTML = Array.from({ length: 32 }, (_, index) => `<i style="--i:${index};--x:${(index * 37) % 100}%;--d:${(index % 9) * .09}s">${index % 3 === 0 ? "◆" : index % 3 === 1 ? "✦" : "✧"}</i>`).join("");
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 2600);
   }
 
   function renderThemes() {

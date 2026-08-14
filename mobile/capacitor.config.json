@@ -1,0 +1,14 @@
+{
+  "appId": "com.jungwoo.sudoku",
+  "appName": "스도쿠",
+  "webDir": "www",
+  "server": {
+    "url": "https://2550563-jung.github.io/sudoku/",
+    "cleartext": false,
+    "allowNavigation": ["2550563-jung.github.io", "*.supabase.co"]
+  },
+  "android": {
+    "backgroundColor": "#f5f8ff",
+    "allowMixedContent": false
+  }
+}
