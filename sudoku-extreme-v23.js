@@ -1,13 +1,14 @@
 (function (root) {
   "use strict";
 
-  const VERSION = 24;
-  // v24: 극한의 정체성은 유지하되 최상위 후보만 고르던 강도를 조금 완화한다.
-  const CANDIDATE_COUNT = 48;
-  const TARGET_SCORE = 62000;
-  // 단순한 17단서 퍼즐보다 현재 해법 탐색기에서 약 3배 더 많은 탐색을 요구하는
-  // 유일해 21단서 기반 퍼즐. 변환 후보 중에서도 가장 어려운 것을 최종 선택한다.
-  const EXTREME_PUZZLE = "800000000003600000070090200050007000000045700000100030001000068008500010090000400"
+  const VERSION = 25;
+  // v25: 인간 플레이에서 과도한 추측을 요구하지 않도록 단서를 늘리고,
+  // 탐색/백트래킹 점수가 가장 높은 변형을 고르던 방식을 제거한다.
+  const CANDIDATE_COUNT = 1;
+  const TARGET_SCORE = 0;
+  // 28단서의 유일해 고난도 퍼즐. 극한의 난도는 유지하면서도
+  // 후보를 무작위로 찍는 대신 논리적 후보 정리로 진행할 수 있게 조정했다.
+  const EXTREME_PUZZLE = "000000907000420180000705026100904000050000040000507009920108000034059000507000000"
     .split("")
     .map(Number);
 
@@ -20,21 +21,11 @@
   }
 
   function hardestVariant(puzzle, solution, transform, analyze) {
-    let best = null;
-    const attempts = [];
-
-    for (let index = 0; index < CANDIDATE_COUNT; index += 1) {
-      const [nextPuzzle, nextSolution] = transform(puzzle, solution);
-      const analysis = analyze(nextPuzzle, 2);
-      const score = difficultyScore(analysis.metrics);
-      const candidate = { puzzle: nextPuzzle, solution: nextSolution, analysis, score };
-      attempts.push(score);
-      if (analysis.solutionCount === 1 && (!best || score > best.score)) best = candidate;
-      if (best?.score >= TARGET_SCORE && index >= 23) break;
-    }
-
-    if (!best) throw new Error("극한 스도쿠 생성에 실패했습니다.");
-    return { ...best, attempts };
+    const [nextPuzzle, nextSolution] = transform(puzzle, solution);
+    const analysis = analyze(nextPuzzle, 2);
+    if (analysis.solutionCount !== 1) throw new Error("극한 스도쿠 생성에 실패했습니다.");
+    const score = difficultyScore(analysis.metrics);
+    return { puzzle: nextPuzzle, solution: nextSolution, analysis, score, attempts: [score] };
   }
 
   const api = Object.freeze({ VERSION, CANDIDATE_COUNT, TARGET_SCORE, EXTREME_PUZZLE, difficultyScore, hardestVariant });
@@ -46,7 +37,7 @@
     root.SudokuCore?.analyzePuzzle
   ) {
     const baseCreateGame = root.createGame;
-    root.createGame = function createHarderExtremeGame(difficulty) {
+    root.createGame = function createBalancedExtremeGame(difficulty) {
       if (difficulty !== "extreme") return baseCreateGame(difficulty);
 
       const seed = Array.from(EXTREME_PUZZLE);
@@ -55,12 +46,7 @@
         return baseCreateGame(difficulty);
       }
 
-      const chosen = hardestVariant(
-        seed,
-        solved,
-        root.transformedPair,
-        root.SudokuCore.analyzePuzzle
-      );
+      const chosen = hardestVariant(seed, solved, root.transformedPair, root.SudokuCore.analyzePuzzle);
 
       return {
         solution: chosen.solution,
