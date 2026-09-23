@@ -27,7 +27,7 @@ const errors = [];
 page.on("pageerror", error => errors.push(String(error.stack || error)));
 await page.route("**/*", route => route.request().url().startsWith(baseUrl) ? route.continue() : route.abort());
 await page.goto(`${baseUrl}/index.html`, { waitUntil: "domcontentloaded", timeout: 30000 });
-await page.waitForFunction(() => window.SudokuExtremeV23?.VERSION === 23);
+await page.waitForFunction(() => window.SudokuExtremeV23?.VERSION === 26);
 const result = await page.evaluate(() => {
   const game = createGame("extreme");
   return {
@@ -38,14 +38,14 @@ const result = await page.evaluate(() => {
     solutionMatches: game.puzzle.every((value, index) => !value || value === game.solution[index])
   };
 });
-assert.equal(result.clues, 17);
+assert.equal(result.clues, 26);
 assert.equal(result.solutions, 1);
 assert.equal(result.hints, 0);
-assert.equal(result.rating.version, 23);
-assert.ok(result.rating.candidates >= 12);
+assert.equal(result.rating.version, 26);
+assert.equal(result.rating.candidates, 1);
 assert.ok(result.rating.score > 0);
 assert.equal(result.solutionMatches, true);
 assert.deepEqual(errors, []);
-console.log("Sudoku extreme v23 browser test passed.", result);
+console.log("Sudoku extreme v26 browser test passed.", result);
 await browser.close();
 await new Promise(resolve => server.close(resolve));

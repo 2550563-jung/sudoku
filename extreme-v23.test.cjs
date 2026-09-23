@@ -14,16 +14,17 @@ const result = extreme.hardestVariant(
   core.analyzePuzzle
 );
 
-assert.equal(extreme.VERSION, 25);
+assert.equal(extreme.VERSION, 26);
 assert.equal(extreme.CANDIDATE_COUNT, 1);
 assert.equal(result.analysis.solutionCount, 1);
-assert.equal(result.puzzle.filter(Boolean).length, 28);
+assert.equal(result.puzzle.filter(Boolean).length, 26);
 assert.equal(result.solution.length, 81);
 assert.equal(result.attempts.length, 1);
 assert.equal(transforms, 1);
 assert.equal(result.score, result.attempts[0]);
 assert.ok(result.score > 0);
-console.log("Sudoku extreme v25 balance test passed.", {
+assert.equal(result.score, 559);
+console.log("Sudoku extreme v26 balance test passed.", {
   score: result.score,
   candidates: result.attempts.length,
   clues: result.puzzle.filter(Boolean).length
